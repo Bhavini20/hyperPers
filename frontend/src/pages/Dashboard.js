@@ -14,20 +14,26 @@ const Dashboard = ({ onNavigate }) => {
     name: '',
     accountNumber: '',
     balance: 0,
-    riskProfile: '',
-    financialHealth: '',
-    sentiment: ''
+    income_bracket: '',
+    financial_goals: '',
+     risk_profile: '', 
+     age:''
   });
   const [recommendations, setRecommendations] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  // const { getUserId } = useAuth(); 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const userProfileData = await apiService.getUserProfile();
-        const recommendationsData = await apiService.getRecommendations('user123');
+        const userId = getUserId();
+        const data = await apiService.getDashboardData(userId);
         
+        const userProfileData = await apiService.getUserProfile(userId);
+        const recommendationsData = await apiService.getRecommendations(userId);
+        setDashboardData(data);
         setUserData(userProfileData);
         setRecommendations(recommendationsData);
       } catch (error) {
@@ -38,7 +44,7 @@ const Dashboard = ({ onNavigate }) => {
     };
 
     fetchData();
-  }, []);
+  }, [getUserId]);
 
   const handleViewAllRecommendations = () => {
     onNavigate('recommendations');

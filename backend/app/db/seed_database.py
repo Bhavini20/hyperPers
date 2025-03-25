@@ -1,9 +1,16 @@
 # seed_database.py
-from user_operations import insert_dummy_users
-from transaction_operations import insert_dummy_transactions
-from product_operations import insert_dummy_products
-from recommendation_operations import insert_dummy_recommendations
-from chat_operations import insert_dummy_chat_messages
+from app.db.connection import db
+from datetime import datetime, timedelta
+import uuid
+import random
+from app.db.user_operations import insert_dummy_users  # Corrected import
+from app.db.transaction_operations import insert_dummy_transactions
+from app.db.product_operations import insert_dummy_products
+from app.db.recommendation_operations import insert_dummy_recommendations
+from app.db.chat_operations import insert_dummy_chat_messages
+
+# Collection reference
+users_collection = db.users
 
 def seed_database():
     """
@@ -13,7 +20,7 @@ def seed_database():
     
     # Step 1: Create dummy users
     print("\nCreating dummy users...")
-    user_ids = insert_dummy_users(5)
+    user_ids = insert_dummy_users(4)
     
     # Step 2: Create dummy products
     print("\nCreating dummy products...")

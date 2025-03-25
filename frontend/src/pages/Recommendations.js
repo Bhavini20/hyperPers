@@ -12,7 +12,8 @@ const Recommendations = () => {
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
-        const data = await apiService.getRecommendations('user123');
+        const userId = getUserId();
+        const data = await apiService.getRecommendations(userId);
         setRecommendations(data);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
@@ -23,7 +24,15 @@ const Recommendations = () => {
 
     fetchRecommendations();
   }, []);
-
+  const handleFeedback = async (recommendationId, isHelpful) => {
+    try {
+      await apiService.submitFeedback(recommendationId, isHelpful);
+      // Update UI to show feedback was received
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+    }
+  };
+  
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>

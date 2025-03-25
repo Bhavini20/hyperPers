@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
 from app.utils.database import recommendations
 from app.services.recommendation import RecommendationService
+from app.db.recommendation_operations import RecommendationOperations
+from app.db.user_operations import UserOperations
 from app.utils.mongo_utils import serialize_mongo_doc
 from typing import List
 
@@ -16,10 +18,13 @@ async def get_recommendations(user_id: str, refresh: bool = False):
     Get recommendations for a user.
     If refresh=True, generate new recommendations.
     """
+    
     try:
+        
+        
         if refresh:
             # Generate new recommendations
-            new_recommendations = await RecommendationService.generate_recommendations(user_id)
+            new_recommendations = await RecommendationOperations.get_user_recommendations(user_id)
             return new_recommendations
         else:
             # Get existing recommendations
@@ -30,7 +35,7 @@ async def get_recommendations(user_id: str, refresh: bool = False):
                     
             if not existing_recommendations:
                 # If no recommendations exist, generate new ones
-                new_recommendations = await RecommendationService.generate_recommendations(user_id)
+                new_recommendations = await RecommendationOperations.get_user_recommendations(user_id)
                 return new_recommendations
             return existing_recommendations
     except Exception as e:
@@ -40,22 +45,16 @@ async def get_recommendations(user_id: str, refresh: bool = False):
         )
 
 @router.post("/{recommendation_id}/feedback", status_code=status.HTTP_200_OK)
-async def record_feedback(recommendation_id: str, is_clicked: bool = False):
-    """
-    Record user feedback on a recommendation
-    """
-    # Find the recommendation
-    recommendation = recommendations.find_one({"recommendation_id": recommendation_id})
-    if not recommendation:
+async def submit_feedback(recommendation_id: str, is_helpful: bool = False):
+    """Submit feedback for a recommendation"""
+    success = RecommendationOperations.record_recommendation_feedback(
+        recommendation_id, is_helpful
+    )
+    
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Recommendation not found"
         )
-    
-    # Update feedback
-    recommendations.update_one(
-        {"recommendation_id": recommendation_id},
-        {"$set": {"is_viewed": True, "is_clicked": is_clicked}}
-    )
     
     return {"status": "success"}

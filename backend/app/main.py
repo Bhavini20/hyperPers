@@ -3,6 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.utils.database import test_connection
 from app.utils.mock_data import populate_mock_data
 from app.routers import users, products, recommendations, sentiment
+from app.routers import auth
+from app.routers import dashboard
+from app.routers import chat
+from app.routers import auth
+
 
 app = FastAPI(
     title="FinPersona AI API",
@@ -13,17 +18,21 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(products.router)
 app.include_router(recommendations.router)
 app.include_router(sentiment.router)
+app.include_router(auth.router)
+app.include_router(dashboard.router)
+app.include_router(chat.router)
 
 @app.on_event("startup")
 async def startup_event():

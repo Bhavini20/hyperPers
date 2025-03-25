@@ -19,6 +19,10 @@ import apiService from '../../services/api';
 const RecommendationCard = ({ recommendation }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+//   const { getUserId } = useAuth();
+// useEffect(() => {
+//   apiService.initAuth({ getUserId });
+// }, [getUserId]);
 
   const handleFeedback = async (isHelpful) => {
     try {

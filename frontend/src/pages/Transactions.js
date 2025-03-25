@@ -9,28 +9,36 @@ import apiService from '../services/api';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
-  const [sentiment, setSentiment] = useState('positive');
+  const [analytics, setAnalytics] = useState(null);
+  const [sentiment, setSentiment] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchTransactionData = async () => {
       try {
         setLoading(true);
-        const transactionData = await apiService.getTransactionHistory('user123');
-        const sentimentData = await apiService.getSentimentAnalysis('user123');
+        const userId = getUserId();
+        
+        // Fetch in parallel
+        const [transactionData, analyticsData, sentimentData] = await Promise.all([
+          apiService.getTransactionHistory(userId),
+          apiService.getTransactionAnalytics(userId),
+          apiService.getSentimentAnalysis(userId)
+        ]);
         
         setTransactions(transactionData);
-        setSentiment(sentimentData.sentiment_analysis.overall_sentiment);
+        setAnalytics(analyticsData);
+        setSentiment(sentimentData.sentiment_analysis);
       } catch (error) {
         console.error('Error fetching transaction data:', error);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchTransactionData();
   }, []);
-
+  
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>

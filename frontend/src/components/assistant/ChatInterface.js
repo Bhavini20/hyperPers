@@ -18,13 +18,17 @@ const ChatInterface = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
-
+//   const { getUserId } = useAuth();
+// useEffect(() => {
+//   apiService.initAuth({ getUserId });
+// }, [getUserId]);
   // Fetch chat history
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
         setLoading(true);
-        const history = await apiService.getChatHistory('user123');
+        const userId = getUserId();
+        const history = await apiService.getChatHistory(userId);
         setMessages(history);
       } catch (error) {
         console.error('Error fetching chat history:', error);
@@ -46,32 +50,32 @@ const ChatInterface = () => {
     
     if (!inputMessage.trim()) return;
     
+    const userId = getUserId();
     const userMessage = {
       id: Date.now(),
       sender: 'user',
       text: inputMessage
     };
     
-    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setSending(true);
     
     try {
-      // Send message to backend and get response
-      const response = await apiService.sendMessage('user123', inputMessage);
-      
-      // Add assistant response to chat
-      setMessages(prevMessages => [...prevMessages, response]);
+      const response = await apiService.sendMessage(userId, inputMessage);
+      setMessages(prev => [...prev, {
+        id: response.message_id,
+        sender: 'assistant',
+        text: response.text
+      }]);
     } catch (error) {
       console.error('Error sending message:', error);
-      
-      // Add error message
-      setMessages(prevMessages => [
-        ...prevMessages, 
+      setMessages(prev => [
+        ...prev,
         {
           id: Date.now(),
           sender: 'assistant',
-          text: 'Sorry, I encountered an error processing your request. Please try again.'
+          text: 'Sorry, I encountered an error. Please try again.'
         }
       ]);
     } finally {

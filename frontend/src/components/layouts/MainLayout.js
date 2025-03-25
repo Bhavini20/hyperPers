@@ -16,7 +16,10 @@ const MainLayout = ({ children }) => {
     financialHealth: '',
     sentiment: ''
   });
-
+  // const { getUserId } = useAuth();
+  // useEffect(() => {
+  //   apiService.initAuth({ getUserId });
+  // }, [getUserId]);
   // Fetch user data on component mount
   useEffect(() => {
     const fetchUserData = async () => {
