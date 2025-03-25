@@ -1,17 +1,11 @@
-# product_operations.py
-from pymongo import MongoClient
-import os
-from dotenv import load_dotenv
-from datetime import datetime
+# app/db/user_operations.py
+from app.db.connection import db
+from datetime import datetime, timedelta
 import uuid
 import random
 
-load_dotenv()
-
-# MongoDB connection
-client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017"))
-db = client[os.getenv("DB_NAME", "finpersona")]
-products_collection = db.products
+# Collection reference
+users_collection = db.users
 
 class ProductOperations:
     @staticmethod

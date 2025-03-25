@@ -1,8 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+# app/routers/users.py
+from fastapi import APIRouter, HTTPException, status
 from app.models.schemas import UserProfile
-from app.utils.database import users
-from typing import List
-import datetime
+from app.db.user_operations import UserOperations
 
 router = APIRouter(
     prefix="/users",
@@ -13,7 +12,8 @@ router = APIRouter(
 @router.post("/", response_model=UserProfile, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserProfile):
     # Check if user with this email already exists
-    if users.find_one({"email": user.email}):
+    existing_user = UserOperations.get_user_by_email(user.email)
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exists"
@@ -21,14 +21,14 @@ async def create_user(user: UserProfile):
     
     # Convert to dict and save to database
     user_dict = user.dict()
-    result = users.insert_one(user_dict)
+    user_id = UserOperations.create_user(user_dict)
     
     # Return the created user
-    return user_dict
+    return {**user_dict, "user_id": user_id}
 
 @router.get("/{user_id}", response_model=UserProfile)
 async def get_user(user_id: str):
-    user = users.find_one({"user_id": user_id})
+    user = UserOperations.get_user_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -36,18 +36,25 @@ async def get_user(user_id: str):
         )
     return user
 
-# Add this new endpoint
-@router.get("/email/{email}", response_model=UserProfile)
-async def get_user_by_email(email: str):
-    user = users.find_one({"email": email})
-    if not user:
+@router.put("/{user_id}", response_model=UserProfile)
+async def update_user(user_id: str, user_update: UserProfile):
+    # Check if user exists
+    existing_user = UserOperations.get_user_by_id(user_id)
+    if not existing_user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    return user
-
-@router.get("/", response_model=List[UserProfile])
-async def get_all_users():
-    all_users = list(users.find())
-    return all_users
+    
+    # Update user data
+    user_dict = user_update.dict()
+    success = UserOperations.update_user(user_id, user_dict)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user"
+        )
+    
+    # Return updated user
+    return {**user_dict, "user_id": user_id}

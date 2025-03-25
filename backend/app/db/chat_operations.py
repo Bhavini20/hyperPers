@@ -1,19 +1,10 @@
-# chat_operations.py
-from pymongo import MongoClient, ASCENDING
-import os
+# app/db/user_operations.py
 from app.db.connection import db
-from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 import random
 
-load_dotenv()
-
-# MongoDB connection
-client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017"))
-db = client[os.getenv("DB_NAME", "finpersona")]
-chat_messages_collection = db.chat_messages
-
+# Collection reference
 users_collection = db.users
 
 class ChatOperations:

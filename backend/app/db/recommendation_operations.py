@@ -1,17 +1,11 @@
-# recommendation_operations.py
-from pymongo import MongoClient, DESCENDING
-import os
-from dotenv import load_dotenv
+# app/db/user_operations.py
+from app.db.connection import db
 from datetime import datetime, timedelta
 import uuid
 import random
 
-load_dotenv()
-
-# MongoDB connection
-client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017"))
-db = client[os.getenv("DB_NAME", "finpersona")]
-recommendations_collection = db.recommendations
+# Collection reference
+users_collection = db.users
 
 class RecommendationOperations:
     @staticmethod
