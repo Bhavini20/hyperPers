@@ -1,6 +1,7 @@
 // src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import { Grid, Box, CircularProgress } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
 import FinancialOverview from '../components/dashboard/FinancialOverview';
 import AIInsights from '../components/dashboard/AIInsights';
 import SpendingBreakdown from '../components/dashboard/SpendingBreakdown';
@@ -10,6 +11,7 @@ import apiService from '../services/api';
 import { spendingData, transactionData } from '../services/mockData';
 
 const Dashboard = ({ onNavigate }) => {
+  const { getUserId } = useAuth();
   const [userData, setUserData] = useState({
     name: '',
     accountNumber: '',
@@ -29,15 +31,33 @@ const Dashboard = ({ onNavigate }) => {
       try {
         setLoading(true);
         const userId = getUserId();
-        const data = await apiService.getDashboardData(userId);
         
-        const userProfileData = await apiService.getUserProfile(userId);
-        const recommendationsData = await apiService.getRecommendations(userId);
-        setDashboardData(data);
-        setUserData(userProfileData);
-        setRecommendations(recommendationsData);
+        // Try to fetch data from API
+        try {
+          const data = await apiService.getDashboardData(userId);
+          setDashboardData(data);
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+          // Fall back to mock data
+        }
+        
+        try {
+          const userProfileData = await apiService.getUserProfile(userId);
+          setUserData(userProfileData);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+        
+        try {
+          const recommendationsData = await apiService.getRecommendations(userId);
+          if (recommendationsData && recommendationsData.length > 0) {
+            setRecommendations(recommendationsData);
+          }
+        } catch (error) {
+          console.error('Error fetching recommendations:', error);
+        }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Error in fetchData:', error);
       } finally {
         setLoading(false);
       }

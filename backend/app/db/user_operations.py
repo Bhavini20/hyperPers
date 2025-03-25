@@ -3,6 +3,8 @@ from app.db.connection import db
 from datetime import datetime, timedelta
 import uuid
 import random
+from uuid import UUID
+
 
 # Collection reference
 users_collection = db.users
@@ -32,16 +34,17 @@ class UserOperations:
     
     @staticmethod
     def get_user_by_id(user_id: str):
-    # Convert string to UUID if needed
+  
         try:
+            # Attempt to convert to UUID if needed
             user_id_uuid = UUID(user_id)
-        # Use user_id_uuid for query if needed
-        except ValueError:
-        # Handle invalid UUID format
+            # You could use user_id_uuid in the query if needed
+        except (ValueError, TypeError):
+            # Continue with original ID if not a valid UUID
             pass
-    
+        
         return users_collection.find_one({"user_id": user_id})
-    
+
     @staticmethod
     def get_user_by_email(email):
         """

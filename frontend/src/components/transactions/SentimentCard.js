@@ -1,33 +1,39 @@
-// src/components/transactions/SentimentCard.js
 import React from 'react';
 import { Card, CardContent, Typography, Box, Avatar } from '@mui/material';
 
 const SentimentCard = ({ sentiment }) => {
-  // Determine emoji based on sentiment
-  const getEmoji = (sentiment) => {
-    switch(sentiment.toLowerCase()) {
+  // Provide default value if sentiment is null or undefined
+  const sentimentValue = sentiment || 'neutral';
+  
+  // Determine emoji based on sentiment - with null check
+  const getEmoji = (sentimentStr) => {
+    // Convert to lowercase safely and provide a default
+    const sentimentLower = (sentimentStr || '').toLowerCase();
+    
+    switch(sentimentLower) {
       case 'positive':
         return '😊';
       case 'negative':
         return '😟';
       case 'neutral':
-        return '😐';
       default:
-        return '😊';
+        return '😐';
     }
   };
 
-  // Determine color based on sentiment
-  const getColor = (sentiment) => {
-    switch(sentiment.toLowerCase()) {
+  // Determine color based on sentiment - with null check
+  const getColor = (sentimentStr) => {
+    // Convert to lowercase safely and provide a default
+    const sentimentLower = (sentimentStr || '').toLowerCase();
+    
+    switch(sentimentLower) {
       case 'positive':
         return 'success.light';
       case 'negative':
         return 'error.light';
       case 'neutral':
-        return 'info.light';
       default:
-        return 'success.light';
+        return 'info.light';
     }
   };
 
@@ -40,16 +46,22 @@ const SentimentCard = ({ sentiment }) => {
             sx={{ 
               width: 56, 
               height: 56, 
-              bgcolor: getColor(sentiment),
+              bgcolor: getColor(sentimentValue),
               fontSize: '1.5rem'
             }}
           >
-            {getEmoji(sentiment)}
+            {getEmoji(sentimentValue)}
           </Avatar>
           <Box sx={{ ml: 2 }}>
-            <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>{sentiment}</Typography>
+            <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
+              {sentimentValue}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Your spending is balanced and sustainable
+              {sentimentValue === 'positive' 
+                ? 'Your spending is balanced and sustainable' 
+                : sentimentValue === 'negative'
+                  ? 'You may want to review your spending habits'
+                  : 'Your financial patterns are steady'}
             </Typography>
           </Box>
         </Box>

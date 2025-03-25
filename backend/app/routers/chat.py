@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Body
 from app.db.chat_operations import ChatOperations
 from app.db.user_operations import UserOperations
 from typing import Dict
+import uuid
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 

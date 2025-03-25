@@ -11,8 +11,10 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import ChatMessage from './ChatMessage';
 import apiService from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const ChatInterface = () => {
+  const { getUserId } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -38,7 +40,7 @@ const ChatInterface = () => {
     };
 
     fetchChatHistory();
-  }, []);
+  }, [getUserId]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -64,7 +66,7 @@ const ChatInterface = () => {
     try {
       const response = await apiService.sendMessage(userId, inputMessage);
       setMessages(prev => [...prev, {
-        id: response.message_id,
+        id: response.id,
         sender: 'assistant',
         text: response.text
       }]);

@@ -1,4 +1,4 @@
-# app/db/user_operations.py
+from pymongo import ASCENDING, DESCENDING
 from app.db.connection import db
 from datetime import datetime, timedelta
 import uuid
@@ -6,6 +6,7 @@ import random
 
 # Collection reference
 users_collection = db.users
+recommendations_collection = db.recommendations
 
 class RecommendationOperations:
     @staticmethod

@@ -1,7 +1,7 @@
-// src/App.js
 import React, { useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider } from './context/AuthContext';
 import MainLayout from './components/layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
@@ -26,17 +26,29 @@ const theme = createTheme({
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard onNavigate={setActiveTab} />;
+      case 'recommendations':
+        return <Recommendations />;
+      case 'transactions':
+        return <Transactions />;
+      case 'assistant':
+        return <Assistant />;
+      default:
+        return <Dashboard onNavigate={setActiveTab} />;
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <MainLayout>
-        {{
-          dashboard: <Dashboard onNavigate={setActiveTab} />,
-          recommendations: <Recommendations />,
-          transactions: <Transactions />,
-          assistant: <Assistant />
-        }}
-      </MainLayout>
+      <AuthProvider>
+        <MainLayout activeTab={activeTab} onTabChange={setActiveTab}>
+          {renderContent()}
+        </MainLayout>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

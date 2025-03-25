@@ -31,19 +31,19 @@ const getAuthHeader = () => {
 
 // API service functions
 const apiService = {
-  // User data
-  getUserProfile: async (specificUserId = null) => {
-    try {
-      const userId = specificUserId || getUserId();
-      const response = await api.get(`/users/${userId}`, {
-        headers: getAuthHeader()
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      return userData; // Fallback to mock data
-    }
-  },
+    getUserProfile: async (specificUserId = null) => {
+        try {
+          const userId = specificUserId || getUserId();
+          const response = await api.get(`/users/${userId}`, {
+            headers: getAuthHeader()
+          });
+          return response.data;
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          // Fall back to mock data
+          return userData;
+        }
+      },
   
   // Dashboard data
   getDashboardData: async (specificUserId = null) => {
