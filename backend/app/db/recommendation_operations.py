@@ -58,7 +58,7 @@ class RecommendationOperations:
     @staticmethod
     def get_user_recommendations(user_id, include_expired=False, limit=10):
         """
-        Get recommendations for a specific user
+        Get recommendations for a specific user - NOT an async method
         
         Args:
             user_id (str): User ID to filter by
@@ -78,7 +78,7 @@ class RecommendationOperations:
         cursor = recommendations_collection.find(query).sort("score", DESCENDING).limit(limit)
         
         return list(cursor)
-    
+
     @staticmethod
     def update_recommendation(recommendation_id, update_data):
         """

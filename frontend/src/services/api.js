@@ -1,6 +1,5 @@
-// src/services/api.js
 import axios from 'axios';
-import { userData, recommendations, transactionData, recentTransactions, chatMessages } from './mockData';
+import { userData, recommendations as mockRecommendations, transactionData, recentTransactions, chatMessages } from './mockData';
 
 // API base URL
 const API_BASE_URL = 'http://localhost:8000';
@@ -59,7 +58,7 @@ const apiService = {
       // Fallback to mock data
       return {
         user: userData,
-        top_recommendation: recommendations[0],
+        top_recommendation: mockRecommendations[0],
         spending_breakdown: {
           'Housing': 35,
           'Food': 20,
@@ -76,13 +75,20 @@ const apiService = {
   getRecommendations: async (specificUserId = null) => {
     try {
       const userId = specificUserId || getUserId();
+      console.log(`Fetching recommendations for user ${userId}`);
+      
+      // Make sure to call the recommendations endpoint, not users endpoint
       const response = await api.get(`/recommendations/${userId}`, {
         headers: getAuthHeader()
       });
+      
+      console.log('Recommendations API response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching recommendations:', error);
-      return recommendations; // Fallback to mock data
+      // Log endpoint that was called for debugging
+      console.log('Failed endpoint:', `/recommendations/${specificUserId || getUserId()}`);
+      return mockRecommendations; // Now correctly references the imported variable
     }
   },
   
@@ -90,7 +96,7 @@ const apiService = {
   submitFeedback: async (recommendationId, isHelpful) => {
     try {
       const response = await api.post(
-        `${API_BASE_URL}/recommendations/${recommendationId}/feedback`, 
+        `/recommendations/${recommendationId}/feedback`, 
         { is_helpful: isHelpful },
         { headers: getAuthHeader() }
       );
@@ -175,9 +181,9 @@ const apiService = {
   },
   
   // Send message to AI assistant
-  sendMessage: async (userId, messageText) => {
+  sendMessage: async (userIdParam, messageText) => {
     try {
-      userId = userId || getUserId();
+      const userId = userIdParam || getUserId();
       const response = await api.post(`/chat/${userId}/message`, 
         { message: messageText },
         { headers: getAuthHeader() }
@@ -223,7 +229,7 @@ const apiService = {
   
   logout: () => {
     localStorage.removeItem('token');
-    // Don't remove userId for the hackathon to keep testing simple
+    
   }
 };
 

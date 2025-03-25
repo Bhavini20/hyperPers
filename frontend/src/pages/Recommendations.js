@@ -1,10 +1,13 @@
-// src/pages/Recommendations.js
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
 import RecommendationCard from '../components/recommendations/RecommendationCard';
 import apiService from '../services/api';
+// At the top of your file with other imports
+import { adaptRecommendationData } from '../utils';
 
 const Recommendations = () => {
+  const { getUserId } = useAuth();
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,25 +16,28 @@ const Recommendations = () => {
       try {
         setLoading(true);
         const userId = getUserId();
+        console.log(`Fetching recommendations for user: ${userId}`);
+        
+        // Make sure we're calling the recommendations endpoint, not users
         const data = await apiService.getRecommendations(userId);
-        setRecommendations(data);
+        console.log('Received recommendations data:', data);
+        
+        // Adapt the data to match the expected format
+        const adaptedData = Array.isArray(data) 
+          ? data.map(adaptRecommendationData)
+          : [];
+          
+        console.log('Adapted recommendations data:', adaptedData);
+        setRecommendations(adaptedData);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchRecommendations();
-  }, []);
-  const handleFeedback = async (recommendationId, isHelpful) => {
-    try {
-      await apiService.submitFeedback(recommendationId, isHelpful);
-      // Update UI to show feedback was received
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-    }
-  };
+  }, [getUserId]);
   
   if (loading) {
     return (
@@ -50,12 +56,18 @@ const Recommendations = () => {
         </Typography>
       </Box>
       
-      {recommendations.map((recommendation) => (
-        <RecommendationCard 
-          key={recommendation.id} 
-          recommendation={recommendation} 
-        />
-      ))}
+      {recommendations.length > 0 ? (
+        recommendations.map((recommendation, index) => (
+          <RecommendationCard 
+            key={recommendation.id || recommendation.recommendation_id || index} 
+            recommendation={recommendation} 
+          />
+        ))
+      ) : (
+        <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
+          No recommendations available at this time.
+        </Typography>
+      )}
     </Box>
   );
 };

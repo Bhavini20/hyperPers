@@ -1,4 +1,4 @@
-// src/components/layout/MainLayout.js
+// src/components/layout/MainLayout.js  
 import React, { useState, useEffect } from 'react';
 import { Box, Toolbar, CssBaseline } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
@@ -23,8 +23,19 @@ const MainLayout = ({ children, activeTab, onTabChange }) => {
     const fetchUserData = async () => {
       try {
         const userId = getUserId();
+        console.log(`Fetching user profile for ${userId}`);
         const data = await apiService.getUserProfile(userId);
-        setUserData(data);
+        console.log('Received user data:', data);
+        
+        // Safely extract and transform user data
+        setUserData({
+          name: data?.name || 'User',
+          accountNumber: data?.financial_profile?.account_number || '*****',
+          balance: data?.financial_profile?.balance || 0,
+          riskProfile: data?.financial_profile?.risk_profile || 'Moderate',
+          financialHealth: data?.financial_profile?.financial_health || 'Good',
+          sentiment: data?.sentiment?.overall_sentiment || 'Neutral'
+        });
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -33,7 +44,7 @@ const MainLayout = ({ children, activeTab, onTabChange }) => {
     fetchUserData();
   }, [getUserId]);
 
-  // Determine which content to render based on activeTab
+  // Commented out renderContent function is preserved as in your original code
   // const renderContent = () => {
   //   switch (activeTab) {
   //     case 'dashboard':
@@ -65,7 +76,8 @@ const MainLayout = ({ children, activeTab, onTabChange }) => {
           flexGrow: 1,
           p: 3,
           mt: 8,
-          backgroundColor: (theme) => theme.palette.grey[100]
+          backgroundColor: (theme) => theme.palette.grey[100],
+          overflow: 'auto'  // Added overflow auto for better scrolling
         }}
       >
         <Toolbar />

@@ -1,13 +1,34 @@
 # app/routers/users.py
 from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
+from typing import Dict, Any, List, Optional
 from app.models.schemas import UserProfile
 from app.db.user_operations import UserOperations
+from app.utils.mongo_utils import serialize_mongo_doc
 
 router = APIRouter(
     prefix="/users",
     tags=["users"],
     responses={404: {"description": "Not found"}},
 )
+
+# Optional: Create a response model specifically for the GET endpoint
+class UserProfileResponse(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    phone: Optional[str] = None
+    created_at: Optional[str] = None  # Use string to avoid datetime serialization issues
+    updated_at: Optional[str] = None
+    last_login: Optional[str] = None
+    profile: Optional[Dict[str, Any]] = None
+    financial_profile: Optional[Dict[str, Any]] = None
+    financial_goals: Optional[List[Dict[str, Any]]] = None  # List of dictionaries
+    preferences: Optional[Dict[str, Any]] = None
+    sentiment: Optional[Dict[str, Any]] = None
+    insights: Optional[List[Dict[str, Any]]] = None
+    anomalies: Optional[List[Dict[str, Any]]] = None
+    predicted_expenses: Optional[List[Dict[str, Any]]] = None
 
 @router.post("/", response_model=UserProfile, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserProfile):
@@ -26,7 +47,7 @@ async def create_user(user: UserProfile):
     # Return the created user
     return {**user_dict, "user_id": user_id}
 
-@router.get("/{user_id}", response_model=UserProfile)
+@router.get("/{user_id}", response_model=Dict[str, Any])  # Changed to Dict to accept any structure
 async def get_user(user_id: str):
     user = UserOperations.get_user_by_id(user_id)
     if not user:
@@ -34,7 +55,10 @@ async def get_user(user_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    return user
+    
+    # Serialize MongoDB document to handle ObjectId and datetime
+    serialized_user = serialize_mongo_doc(user)
+    return serialized_user
 
 @router.put("/{user_id}", response_model=UserProfile)
 async def update_user(user_id: str, user_update: UserProfile):

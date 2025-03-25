@@ -28,15 +28,17 @@ const TransactionList = ({ transactions }) => {
                 <TableCell>Date</TableCell>
                 <TableCell>Description</TableCell>
                 <TableCell>Category</TableCell>
+                <TableCell>Merchant</TableCell>
                 <TableCell align="right">Amount</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id}>
-                  <TableCell>{transaction.date}</TableCell>
+                  <TableCell>{transaction.timestamp}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>{transaction.category}</TableCell>
+                  <TableCell>{transaction.merchant}</TableCell>
                   <TableCell 
                     align="right"
                     sx={{ 
@@ -52,12 +54,12 @@ const TransactionList = ({ transactions }) => {
           </Table>
         </TableContainer>
         
-        <Button 
+        {/* <Button 
           endIcon={<ArrowForwardIcon />}
           color="primary"
         >
           View all transactions
-        </Button>
+        </Button> */}
       </CardContent>
     </Card>
   );

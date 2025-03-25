@@ -1,11 +1,10 @@
-from pymongo import ASCENDING, DESCENDING
 from app.db.connection import db
 from datetime import datetime, timedelta
 import uuid
 import random
+from pymongo import ASCENDING, DESCENDING
 
 # Collection reference
-users_collection = db.users
 transactions_collection = db.transactions
 
 class TransactionOperations:
@@ -29,7 +28,7 @@ class TransactionOperations:
             transaction_data["transaction_id"] = str(uuid.uuid4())
             
         result = transactions_collection.insert_one(transaction_data)
-        return str(result.inserted_id)
+        return transaction_data["transaction_id"]
     
     @staticmethod
     def get_transaction_by_id(transaction_id):
@@ -45,9 +44,10 @@ class TransactionOperations:
         return transactions_collection.find_one({"transaction_id": transaction_id})
     
     @staticmethod
-    def get_user_transactions(user_id, limit=50, skip=0, sort_by="timestamp", sort_order=-1):
+    def get_user_transactions(user_id, limit=50, skip=0, sort_by="timestamp", sort_order=-1, 
+                              start_date=None, end_date=None, category=None):
         """
-        Get transactions for a specific user
+        Get transactions for a specific user with optional filtering
         
         Args:
             user_id (str): User ID to filter by
@@ -55,11 +55,32 @@ class TransactionOperations:
             skip (int): Number of transactions to skip (for pagination)
             sort_by (str): Field to sort by
             sort_order (int): Sort order (1 for ascending, -1 for descending)
+            start_date (datetime, optional): Filter by transactions after this date
+            end_date (datetime, optional): Filter by transactions before this date
+            category (str, optional): Filter by category
             
         Returns:
             list: List of transaction documents
         """
-        cursor = transactions_collection.find({"user_id": user_id})
+        # Build query
+        query = {"user_id": user_id}
+        
+        # Add date range if provided
+        if start_date or end_date:
+            query["timestamp"] = {}
+            
+            if start_date:
+                query["timestamp"]["$gte"] = start_date
+                
+            if end_date:
+                query["timestamp"]["$lte"] = end_date
+        
+        # Add category filter if provided
+        if category:
+            query["category"] = category
+        
+        # Execute query with sorting and pagination
+        cursor = transactions_collection.find(query)
         
         # Apply sorting
         cursor = cursor.sort(sort_by, sort_order)
@@ -68,6 +89,29 @@ class TransactionOperations:
         cursor = cursor.skip(skip).limit(limit)
         
         return list(cursor)
+    
+    @staticmethod
+    def get_user_transactions_in_date_range(user_id, start_date, end_date):
+        """
+        Get all transactions for a user within a date range
+        
+        Args:
+            user_id (str): User ID to filter by
+            start_date (datetime): Start date for filtering
+            end_date (datetime): End date for filtering
+            
+        Returns:
+            list: List of transaction documents
+        """
+        query = {
+            "user_id": user_id,
+            "timestamp": {
+                "$gte": start_date,
+                "$lte": end_date
+            }
+        }
+        
+        return list(transactions_collection.find(query))
     
     @staticmethod
     def get_transactions_by_category(user_id, category, start_date=None, end_date=None):
@@ -244,114 +288,134 @@ class TransactionOperations:
         result = sorted(monthly_spending.values(), key=lambda x: (x["year"], x["month"]))
         
         return result
-
-
-def insert_dummy_transactions(user_ids, count_per_user=30):
-    """
-    Insert dummy transaction data for specified users
     
-    Args:
-        user_ids (list): List of user IDs to create transactions for
-        count_per_user (int): Number of transactions per user
+    @staticmethod
+    def get_user_categories(user_id):
+        """
+        Get all unique transaction categories used by a user
         
-    Returns:
-        int: Number of transactions created
-    """
-    total_created = 0
-    
-    # Sample data for variation
-    categories = [
-        "Groceries", "Dining", "Entertainment", "Utilities", 
-        "Rent", "Mortgage", "Transportation", "Shopping", 
-        "Healthcare", "Education", "Travel", "Subscription"
-    ]
-    
-    merchants = {
-        "Groceries": ["Whole Foods", "Safeway", "Kroger", "Trader Joe's"],
-        "Dining": ["McDonald's", "Starbucks", "Chipotle", "Local Restaurant"],
-        "Entertainment": ["Netflix", "Movie Theater", "Concert Venue", "Theme Park"],
-        "Utilities": ["Electric Company", "Water Service", "Gas Company", "Internet Provider"],
-        "Rent": ["Apartment Complex", "Property Management"],
-        "Mortgage": ["Bank of America", "Wells Fargo", "Chase"],
-        "Transportation": ["Uber", "Lyft", "Gas Station", "Public Transit"],
-        "Shopping": ["Amazon", "Target", "Walmart", "Best Buy"],
-        "Healthcare": ["Pharmacy", "Doctor's Office", "Hospital", "Dental Clinic"],
-        "Education": ["University", "Online Course", "Bookstore"],
-        "Travel": ["Airline", "Hotel", "Car Rental", "Travel Agency"],
-        "Subscription": ["Gym Membership", "Magazine", "Software Service"]
-    }
-    
-    payment_methods = ["Credit Card", "Debit Card", "Bank Transfer", "Cash", "Mobile Payment"]
-    
-    for user_id in user_ids:
-        # Generate transactions for this user
-        for _ in range(count_per_user):
-            # Random date within last 90 days
-            days_ago = random.randint(0, 90)
-            transaction_date = datetime.now() - timedelta(days=days_ago)
+        Args:
+            user_id (str): User ID to filter by
             
-            # Random category and merchant
-            category = random.choice(categories)
-            merchant = random.choice(merchants.get(category, ["Unknown"]))
-            
-            # Determine if it's income or expense (20% chance of income)
-            is_income = random.random() < 0.2
-            
-            # Amount based on category
-            if is_income:
-                amount = random.uniform(1000, 5000)
-                category = "Income"
-                merchant = random.choice(["Payroll", "Freelance", "Dividends", "Interest", "Gift"])
-            elif category in ["Rent", "Mortgage"]:
-                amount = -1 * random.uniform(1000, 2500)
-            elif category in ["Utilities", "Transportation", "Healthcare"]:
-                amount = -1 * random.uniform(50, 300)
-            elif category in ["Groceries", "Dining", "Shopping"]:
-                amount = -1 * random.uniform(10, 200)
-            else:
-                amount = -1 * random.uniform(5, 100)
-            
-            # Create transaction
-            transaction = {
-                "transaction_id": str(uuid.uuid4()),
-                "user_id": user_id,
-                "amount": round(amount, 2),
-                "description": f"{merchant} {'Payment' if amount < 0 else 'Deposit'}",
-                "category": category,
-                "merchant": merchant,
-                "timestamp": transaction_date,
-                "location": {
-                    "city": random.choice(["New York", "San Francisco", "Chicago", "Austin"]),
-                    "state": random.choice(["NY", "CA", "IL", "TX"])
-                },
-                "payment_method": random.choice(payment_methods),
-                "account_id": f"acc{random.randint(100, 999)}",
-                "tags": random.sample(["essential", "discretionary", "recurring", "one-time"], k=random.randint(0, 2)),
-                "is_recurring": random.random() < 0.3,
-                "notes": ""
-            }
-            
-            # Insert the transaction
-            transactions_collection.insert_one(transaction)
-            total_created += 1
-    
-    print(f"Created {total_created} dummy transactions for {len(user_ids)} users")
-    return total_created
+        Returns:
+            list: List of unique categories
+        """
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$group": {"_id": "$category"}},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        result = transactions_collection.aggregate(pipeline)
+        return [doc["_id"] for doc in result if doc["_id"] is not None]
 
+    @staticmethod
+    def insert_dummy_transactions(user_ids, count_per_user=30):
+        """
+        Insert dummy transaction data for specified users
+        
+        Args:
+            user_ids (list): List of user IDs to create transactions for
+            count_per_user (int): Number of transactions per user
+            
+        Returns:
+            int: Number of transactions created
+        """
+        total_created = 0
+        
+        # Sample data for variation
+        categories = [
+            "Groceries", "Dining", "Entertainment", "Utilities", 
+            "Rent", "Mortgage", "Transportation", "Shopping", 
+            "Healthcare", "Education", "Travel", "Subscription"
+        ]
+        
+        merchants = {
+            "Groceries": ["Whole Foods", "Safeway", "Kroger", "Trader Joe's"],
+            "Dining": ["McDonald's", "Starbucks", "Chipotle", "Local Restaurant"],
+            "Entertainment": ["Netflix", "Movie Theater", "Concert Venue", "Theme Park"],
+            "Utilities": ["Electric Company", "Water Service", "Gas Company", "Internet Provider"],
+            "Rent": ["Apartment Complex", "Property Management"],
+            "Mortgage": ["Bank of America", "Wells Fargo", "Chase"],
+            "Transportation": ["Uber", "Lyft", "Gas Station", "Public Transit"],
+            "Shopping": ["Amazon", "Target", "Walmart", "Best Buy"],
+            "Healthcare": ["Pharmacy", "Doctor's Office", "Hospital", "Dental Clinic"],
+            "Education": ["University", "Online Course", "Bookstore"],
+            "Travel": ["Airline", "Hotel", "Car Rental", "Travel Agency"],
+            "Subscription": ["Gym Membership", "Magazine", "Software Service"]
+        }
+        
+        payment_methods = ["Credit Card", "Debit Card", "Bank Transfer", "Cash", "Mobile Payment"]
+        
+        for user_id in user_ids:
+            # Generate transactions for this user
+            for _ in range(count_per_user):
+                # Random date within last 90 days
+                days_ago = random.randint(0, 90)
+                transaction_date = datetime.now() - timedelta(days=days_ago)
+                
+                # Random category and merchant
+                category = random.choice(categories)
+                merchant = random.choice(merchants.get(category, ["Unknown"]))
+                
+                # Determine if it's income or expense (20% chance of income)
+                is_income = random.random() < 0.2
+                
+                # Amount based on category
+                if is_income:
+                    amount = random.uniform(1000, 5000)
+                    category = "Income"
+                    merchant = random.choice(["Payroll", "Freelance", "Dividends", "Interest", "Gift"])
+                elif category in ["Rent", "Mortgage"]:
+                    amount = -1 * random.uniform(1000, 2500)
+                elif category in ["Utilities", "Transportation", "Healthcare"]:
+                    amount = -1 * random.uniform(50, 300)
+                elif category in ["Groceries", "Dining", "Shopping"]:
+                    amount = -1 * random.uniform(10, 200)
+                else:
+                    amount = -1 * random.uniform(5, 100)
+                
+                # Create transaction
+                transaction = {
+                    "transaction_id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "amount": round(amount, 2),
+                    "description": f"{merchant} {'Payment' if amount < 0 else 'Deposit'}",
+                    "category": category,
+                    "merchant": merchant,
+                    "timestamp": transaction_date,
+                    "location": {
+                        "city": random.choice(["New York", "San Francisco", "Chicago", "Austin"]),
+                        "state": random.choice(["NY", "CA", "IL", "TX"])
+                    },
+                    "payment_method": random.choice(payment_methods),
+                    "account_id": f"acc{random.randint(100, 999)}",
+                    "tags": random.sample(["essential", "discretionary", "recurring", "one-time"], k=random.randint(0, 2)),
+                    "is_recurring": random.random() < 0.3,
+                    "notes": ""
+                }
+                
+                # Insert the transaction
+                transactions_collection.insert_one(transaction)
+                total_created += 1
+        
+        print(f"Created {total_created} dummy transactions for {len(user_ids)} users")
+        return total_created
 
-if __name__ == "__main__":
-    # Test the functions
-    from user_operations import UserOperations
-    
-    # Get some user IDs
-    users = list(db.users.find({}, {"user_id": 1}).limit(3))
-    user_ids = [user["user_id"] for user in users]
-    
-    if not user_ids:
-        print("No users found. Creating some dummy users first...")
-        from user_operations import insert_dummy_users
-        user_ids = insert_dummy_users(3)
-    
-    print("Inserting dummy transactions...")
-    insert_dummy_transactions(user_ids, 40)
-    print("Done!")
+    # This allows you to run this file directly to insert dummy data
+    if __name__ == "__main__":
+        # Test the functions
+        from app.db.user_operations import UserOperations
+        
+        # Get some user IDs
+        users = list(db.users.find({}, {"user_id": 1}).limit(3))
+        user_ids = [user["user_id"] for user in users]
+        
+        if not user_ids:
+            print("No users found. Creating some dummy users first...")
+            from app.db.user_operations import insert_dummy_users
+            user_ids = insert_dummy_users(3)
+        
+        print("Inserting dummy transactions...")
+        insert_dummy_transactions(user_ids, 40)
+        print("Done!")

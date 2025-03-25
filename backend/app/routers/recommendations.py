@@ -20,14 +20,13 @@ async def get_recommendations(user_id: str, refresh: bool = False):
     """
     
     try:
-        
-        
         if refresh:
-            # Generate new recommendations
-            new_recommendations = await RecommendationOperations.get_user_recommendations(user_id)
+            # Generate new recommendations - this should be an async function
+            # Make sure RecommendationService.generate_recommendations is async
+            new_recommendations = await RecommendationService.generate_recommendations(user_id)
             return new_recommendations
         else:
-            # Get existing recommendations
+            # Get existing recommendations - This is NOT an async operation, don't use await here
             existing_recommendations = list(recommendations.find({"user_id": user_id}))
             
             # Serialize MongoDB documents
@@ -35,8 +34,10 @@ async def get_recommendations(user_id: str, refresh: bool = False):
                     
             if not existing_recommendations:
                 # If no recommendations exist, generate new ones
-                new_recommendations = await RecommendationOperations.get_user_recommendations(user_id)
+                # Make sure RecommendationService.generate_recommendations is async
+                new_recommendations = await RecommendationService.generate_recommendations(user_id)
                 return new_recommendations
+            
             return existing_recommendations
     except Exception as e:
         raise HTTPException(

@@ -9,6 +9,8 @@ class RecommendationService:
     async def generate_recommendations(user_id: str, count: int = 3):
         """
         Generate product recommendations for a user
+        
+        This is an async method that should be awaited
         """
         # Get user profile
         user = users.find_one({"user_id": user_id})
@@ -53,7 +55,7 @@ class RecommendationService:
         
         for product in suitable_products:
             # Calculate a mock recommendation score
-            score = round(random.uniform(0.7, 1.0), 2)
+            score = round(random.uniform(0.7, 1.0) * 100, 0)
             
             # Create a simple reason
             reason = f"Based on your {user.get('risk_profile', 'moderate')} risk profile and financial goals."
@@ -69,15 +71,15 @@ class RecommendationService:
                 "reason": reason,
                 "timestamp": datetime.now(),
                 "is_viewed": False,
-                "is_clicked": False
+                "is_clicked": False,
+                "features": product.get("features", [])
             }
             
             # Save to database
             result = recommendations.insert_one(recommendation)
             
-            # Set the MongoDB ID as a string
-            recommendation["_id"] = str(result.inserted_id)
-            
-            recommendation_records.append(recommendation)
+            # Serialize and add to return list
+            serialized_recommendation = serialize_mongo_doc(recommendation)
+            recommendation_records.append(serialized_recommendation)
         
         return recommendation_records
