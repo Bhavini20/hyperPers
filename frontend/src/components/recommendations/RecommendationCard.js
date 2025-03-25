@@ -52,21 +52,7 @@ const RecommendationCard = ({ recommendation }) => {
           <Typography variant="subtitle2" gutterBottom>Why we recommend this</Typography>
           <Typography variant="body2">{recommendation.reason}</Typography>
         </Box>
-        
-        <Box sx={{ my: 2 }}>
-          <Typography variant="subtitle2" gutterBottom>Key Features</Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {recommendation.features.map((feature, index) => (
-              <Chip 
-                key={index} 
-                label={feature} 
-                size="small" 
-                variant="outlined"
-              />
-            ))}
-          </Box>
-        </Box>
-        
+                
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button variant="contained" color="primary" fullWidth>
             Learn More

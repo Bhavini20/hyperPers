@@ -68,6 +68,7 @@ class RecommendationService:
                 "score": score,
                 "reason": reason,
                 "timestamp": datetime.now(),
+                "title": product["name"],
                 "is_viewed": False,
                 "is_clicked": False
             }

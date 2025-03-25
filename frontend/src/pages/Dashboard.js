@@ -26,8 +26,8 @@ const Dashboard = ({ onNavigate }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const userProfileData = await apiService.getUserProfile();
-        const recommendationsData = await apiService.getRecommendations('user123');
+        const userProfileData = await apiService.getUserProfile("user123");
+        const recommendationsData = await apiService.getRecommendations("user123");
         
         setUserData(userProfileData);
         setRecommendations(recommendationsData);

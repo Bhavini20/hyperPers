@@ -49,3 +49,4 @@ class Recommendation(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     is_viewed: bool = False
     is_clicked: bool = False
+    features: Optional[str] = None

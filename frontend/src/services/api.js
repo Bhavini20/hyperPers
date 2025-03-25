@@ -16,10 +16,10 @@ const api = axios.create({
 // API service functions
 const apiService = {
   // User data
-  getUserProfile: async () => {
+  getUserProfile: async (userId) => {
     try {
       // When backend is ready:
-      const response = await api.get('/users');
+      const response = await api.get(`/users/${userId}`);
       return response.data;
       
       // Using mock data for now

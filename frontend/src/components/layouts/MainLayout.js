@@ -21,7 +21,7 @@ const MainLayout = ({ children }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const data = await apiService.getUserProfile();
+        const data = await apiService.getUserProfile("user123");
         setUserData(data);
       } catch (error) {
         console.error('Error fetching user data:', error);

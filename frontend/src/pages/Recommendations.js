@@ -12,7 +12,7 @@ const Recommendations = () => {
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
-        const data = await apiService.getRecommendations('user123');
+        const data = await apiService.getRecommendations("user123");
         setRecommendations(data);
       } catch (error) {
         console.error('Error fetching recommendations:', error);

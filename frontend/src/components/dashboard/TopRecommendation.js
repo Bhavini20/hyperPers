@@ -43,17 +43,7 @@ const TopRecommendation = ({ recommendation, onViewAll }) => {
           </Box>
           
           <Typography variant="body2" sx={{ my: 2 }}>{recommendation.reason}</Typography>
-          
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-            {recommendation.features.map((feature, index) => (
-              <Chip 
-                key={index} 
-                label={feature} 
-                size="small" 
-                variant="outlined"
-              />
-            ))}
-          </Box>
+        
           
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button variant="contained" color="primary" fullWidth>
