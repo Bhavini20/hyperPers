@@ -19,11 +19,11 @@ const apiService = {
   getUserProfile: async () => {
     try {
       // When backend is ready:
-      // const response = await api.get('/users/current');
-      // return response.data;
+      const response = await api.get('/users');
+      return response.data;
       
       // Using mock data for now
-      return userData;
+      // return userData;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return userData; // Fallback to mock data
@@ -34,8 +34,8 @@ const apiService = {
   getRecommendations: async (userId) => {
     try {
       // When backend is ready:
-      // const response = await api.get(`/recommendations/${userId}`);
-      // return response.data;
+      const response = await api.get(`/recommendations/${userId}`);
+      return response.data;
       
       // Using mock data for now
       return recommendations;
@@ -49,13 +49,13 @@ const apiService = {
   submitFeedback: async (recommendationId, isHelpful) => {
     try {
       // When backend is ready:
-      // const response = await api.post(`/recommendations/${recommendationId}/feedback`, {
-      //   is_clicked: isHelpful
-      // });
-      // return response.data;
+      const response = await api.post(`/recommendations/${recommendationId}/feedback`, {
+        is_clicked: isHelpful
+      });
+      return response.data;
       
       // Mock response
-      return { status: 'success' };
+      // return { status: 'success' };
     } catch (error) {
       console.error('Error submitting feedback:', error);
       throw error;
@@ -96,8 +96,8 @@ const apiService = {
   getSentimentAnalysis: async (userId) => {
     try {
       // When backend is ready:
-      // const response = await api.get(`/sentiment/${userId}`);
-      // return response.data;
+      const response = await api.get(`/sentiment/${userId}`);
+      return response.data;
       
       // Mock response
       return {

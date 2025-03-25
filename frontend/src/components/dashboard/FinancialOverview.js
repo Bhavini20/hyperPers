@@ -10,7 +10,7 @@ const FinancialOverview = ({ userData }) => {
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2" color="text.secondary">Current Balance</Typography>
-          <Typography variant="h5" fontWeight="bold">${userData.balance.toLocaleString()}</Typography>
+          <Typography variant="h5" fontWeight="bold">${userData.balance}</Typography>
         </Box>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>

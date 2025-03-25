@@ -13,10 +13,11 @@ const Dashboard = ({ onNavigate }) => {
   const [userData, setUserData] = useState({
     name: '',
     accountNumber: '',
-    balance: 0,
+    income_bracket: '',
     riskProfile: '',
-    financialHealth: '',
-    sentiment: ''
+    financial_goals: '',
+    risk_profile: '', 
+    age:''
   });
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);

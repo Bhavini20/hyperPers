@@ -10,6 +10,7 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 @router.get("/{user_id}")
 async def get_recommendations(user_id: str, refresh: bool = False):
     """

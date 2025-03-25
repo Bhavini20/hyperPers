@@ -10,6 +10,7 @@ class UserProfile(BaseModel):
     name: str
     age: Optional[int] = None
     income_bracket: Optional[str] = None
+    balance: Optional[str] = None
     risk_profile: Optional[str] = None
     financial_goals: Optional[List[str]] = []
     preferred_categories: Optional[List[str]] = []

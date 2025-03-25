@@ -25,7 +25,7 @@ app.include_router(products.router)
 app.include_router(recommendations.router)
 app.include_router(sentiment.router)
 
-@app.on_event("startup")
+@app.get("/insertMock")
 async def startup_event():
     # Populate mock data on startup
     await populate_mock_data()
