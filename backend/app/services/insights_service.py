@@ -1,4 +1,3 @@
-# app/services/insights_service.py
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import logging
@@ -224,6 +223,85 @@ class InsightsService:
                 "start_time": datetime.now().isoformat()
             }
     
+    def mark_insight_read(self, user_id: str, insight_id: str) -> bool:
+        """
+        Mark an insight as read
+        
+        Args:
+            user_id: User ID
+            insight_id: Insight ID to mark as read
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Get user profile
+            user = UserOperations.get_user_by_id(user_id)
+            if not user:
+                return False
+            
+            # Get insights
+            insights = user.get("insights", [])
+            
+            # Find the specific insight
+            updated = False
+            for insight in insights:
+                if insight.get("insight_id") == insight_id:
+                    insight["is_read"] = True
+                    updated = True
+                    break
+            
+            if updated:
+                # Update user profile
+                success = UserOperations.update_user(user_id, {"insights": insights})
+                return success
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error marking insight as read: {str(e)}")
+            return False
+    
+    def record_insight_action(self, user_id: str, insight_id: str, acted_upon: bool) -> bool:
+        """
+        Record whether a user acted upon an insight
+        
+        Args:
+            user_id: User ID
+            insight_id: Insight ID
+            acted_upon: Whether the user acted upon the insight
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            # Get user profile
+            user = UserOperations.get_user_by_id(user_id)
+            if not user:
+                return False
+            
+            # Get insights
+            insights = user.get("insights", [])
+            
+            # Find the specific insight
+            updated = False
+            for insight in insights:
+                if insight.get("insight_id") == insight_id:
+                    insight["is_acted_upon"] = acted_upon
+                    updated = True
+                    break
+            
+            if updated:
+                # Update user profile
+                success = UserOperations.update_user(user_id, {"insights": insights})
+                return success
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error recording insight action: {str(e)}")
+            return False
+    
     async def generate_insights_from_transaction(self, user_id: str, transaction: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Generate insights based on a specific new transaction
@@ -303,82 +381,3 @@ class InsightsService:
         except Exception as e:
             logger.error(f"Error generating insights from transaction: {str(e)}")
             return []
-    
-    def mark_insight_read(self, user_id: str, insight_id: str) -> bool:
-        """
-        Mark an insight as read
-        
-        Args:
-            user_id: User ID
-            insight_id: Insight ID to mark as read
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            # Get user profile
-            user = UserOperations.get_user_by_id(user_id)
-            if not user:
-                return False
-            
-            # Get insights
-            insights = user.get("insights", [])
-            
-            # Find the specific insight
-            updated = False
-            for insight in insights:
-                if insight.get("insight_id") == insight_id:
-                    insight["is_read"] = True
-                    updated = True
-                    break
-            
-            if updated:
-                # Update user profile
-                success = UserOperations.update_user(user_id, {"insights": insights})
-                return success
-            
-            return False
-            
-        except Exception as e:
-            logger.error(f"Error marking insight as read: {str(e)}")
-            return False
-    
-    def record_insight_action(self, user_id: str, insight_id: str, acted_upon: bool) -> bool:
-        """
-        Record whether a user acted upon an insight
-        
-        Args:
-            user_id: User ID
-            insight_id: Insight ID
-            acted_upon: Whether the user acted upon the insight
-            
-        Returns:
-            True if successful, False otherwise
-        """
-        try:
-            # Get user profile
-            user = UserOperations.get_user_by_id(user_id)
-            if not user:
-                return False
-            
-            # Get insights
-            insights = user.get("insights", [])
-            
-            # Find the specific insight
-            updated = False
-            for insight in insights:
-                if insight.get("insight_id") == insight_id:
-                    insight["is_acted_upon"] = acted_upon
-                    updated = True
-                    break
-            
-            if updated:
-                # Update user profile
-                success = UserOperations.update_user(user_id, {"insights": insights})
-                return success
-            
-            return False
-            
-        except Exception as e:
-            logger.error(f"Error recording insight action: {str(e)}")
-            return False

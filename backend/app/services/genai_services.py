@@ -4,10 +4,11 @@ import json
 from datetime import datetime
 import google.generativeai as genai
 # from google.generativeai.types import HarmCategory, HarmBlockThreshold
+# from google import genai
 
 # Configure API key
 API_KEY = os.getenv("GENAI_API_KEY")
-genai.configure(api_key=API_KEY)
+genai.configure(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
 
 class GenAIService:
     """
@@ -69,7 +70,7 @@ class GenAIService:
             transaction_summary = "Recent Transactions:\n"
             
             for txn in recent_txns:
-                date = txn.get('timestamp', datetime.now()).strftime("%Y-%m-%d")
+                date = txn.get('timestamp', datetime.now()).strftime("%Y-%m-%d") if isinstance(txn.get('timestamp'), datetime) else str(txn.get('timestamp', 'Unknown Date'))
                 amount = txn.get('amount', 0)
                 category = txn.get('category', 'Uncategorized')
                 merchant = txn.get('merchant', 'Unknown')
@@ -152,10 +153,13 @@ class GenAIService:
         full_prompt = f"{system_prompt}\n\n{profile_summary}\n\n{product_summary}\n\n{transaction_info}\n\nGenerate a personalized recommendation explanation:"
         
         # Generate recommendation text
-        response = self.model.generate_content(full_prompt)
+        # response = self.model.generate_content(full_prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=full_prompt)
         
         # Generate a match score based on the user profile and product
-        # In a real implementation, this would be more sophisticated
         score_prompt = f"""
         Based on the following user profile and product information, calculate a match score from 0-100.
         Higher scores mean better match. Only return a number.
@@ -205,7 +209,7 @@ class GenAIService:
         # Create a summary of transactions
         transaction_summary = ""
         for txn in transactions[:20]:  # Analyze up to 20 recent transactions
-            date = txn.get('timestamp', datetime.now()).strftime("%Y-%m-%d")
+            date = txn.get('timestamp', datetime.now()).strftime("%Y-%m-%d") if isinstance(txn.get('timestamp'), datetime) else str(txn.get('timestamp', 'Unknown Date'))
             amount = txn.get('amount', 0)
             category = txn.get('category', 'Uncategorized')
             
@@ -259,6 +263,111 @@ class GenAIService:
                 "financial_health": "stable",
                 "explanation": f"Could not analyze sentiment: {str(e)}"
             }
+    
+    async def detect_anomalies(self, transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Detect spending anomalies in transaction history
+        
+        Args:
+            transactions: List of user transactions
+            
+        Returns:
+            List of anomaly objects
+        """
+        if len(transactions) < 10:  # Not enough data
+            return []
+            
+        # Prepare transactions summary by category
+        categories = {}
+        for txn in transactions:
+            if txn.get('amount', 0) >= 0:  # Skip income
+                continue
+                
+            date = txn.get('timestamp').strftime("%Y-%m-%d") if isinstance(txn.get('timestamp'), datetime) else str(txn.get('timestamp', ''))
+            amount = abs(txn.get('amount', 0))
+            category = txn.get('category', 'Other')
+            merchant = txn.get('merchant', 'Unknown')
+            
+            if category not in categories:
+                categories[category] = []
+                
+            categories[category].append({
+                "date": date,
+                "amount": amount,
+                "merchant": merchant
+            })
+        
+        # Format data for prompt
+        category_summaries = ""
+        for category, txns in categories.items():
+            total = sum(t['amount'] for t in txns)
+            avg = total / len(txns) if txns else 0
+            category_summaries += f"\n{category}:\n"
+            category_summaries += f"- Total: ${total:.2f}\n"
+            category_summaries += f"- Average: ${avg:.2f}\n"
+            category_summaries += f"- Transactions: {len(txns)}\n"
+            category_summaries += "- Recent transactions:\n"
+            
+            for txn in sorted(txns, key=lambda x: x['date'], reverse=True)[:5]:
+                category_summaries += f"  * {txn['date']}: ${txn['amount']:.2f} at {txn['merchant']}\n"
+        
+        prompt = f"""
+        Analyze the following transaction data and identify any spending anomalies.
+        Look for unusual spending patterns, significant increases in specific categories,
+        or other financial behaviors that stand out.
+        
+        Transaction Data by Category:
+        {category_summaries}
+        
+        Identify up to 3 specific anomalies or unusual patterns in JSON format:
+        [
+          {{
+            "category": "Category name",
+            "description": "Detailed description of the anomaly",
+            "severity": "high/medium/low",
+            "amount": numeric amount (if applicable)
+          }}
+        ]
+        
+        If no clear anomalies are detected, return an empty array [].
+        
+        Anomalies JSON:
+        """
+        
+        response = self.model.generate_content(prompt)
+        
+        try:
+            # Try to extract JSON from the response
+            text = response.text
+            # Find JSON content between triple backticks if present
+            if "```json" in text and "```" in text.split("```json")[1]:
+                json_str = text.split("```json")[1].split("```")[0].strip()
+            elif "```" in text and "```" in text.split("```")[1]:
+                json_str = text.split("```")[1].split("```")[0].strip()
+            else:
+                json_str = text.strip()
+                
+            anomalies = json.loads(json_str)
+            
+            if not isinstance(anomalies, list):
+                raise ValueError("Response is not a list of anomalies")
+                
+            # Add detection date
+            for anomaly in anomalies:
+                anomaly["detection_date"] = datetime.now()
+                # Ensure all required fields exist
+                if "category" not in anomaly:
+                    anomaly["category"] = "Unknown"
+                if "description" not in anomaly:
+                    anomaly["description"] = "Unusual spending pattern detected"
+                if "severity" not in anomaly:
+                    anomaly["severity"] = "medium"
+                
+            return anomalies
+            
+        except Exception as e:
+            # Return empty list if parsing fails
+            return []
     
     async def generate_financial_insights(self, 
                                    user_profile: Dict[str, Any],
@@ -364,112 +473,6 @@ class GenAIService:
                 "description": "Based on your spending patterns, you may have opportunities to optimize your budget.",
                 "importance": "medium"
             }]
-    
-    async def detect_anomalies(self, 
-                        transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Detect spending anomalies in transaction history
-        
-        Args:
-            transactions: List of user transactions
-            
-        Returns:
-            List of anomaly objects
-        """
-        if len(transactions) < 10:  # Not enough data
-            return []
-            
-        # Prepare transactions summary by category
-        categories = {}
-        for txn in transactions:
-            if txn.get('amount', 0) >= 0:  # Skip income
-                continue
-                
-            date = txn.get('timestamp').strftime("%Y-%m-%d") if isinstance(txn.get('timestamp'), datetime) else str(txn.get('timestamp', ''))
-            amount = abs(txn.get('amount', 0))
-            category = txn.get('category', 'Other')
-            merchant = txn.get('merchant', 'Unknown')
-            
-            if category not in categories:
-                categories[category] = []
-                
-            categories[category].append({
-                "date": date,
-                "amount": amount,
-                "merchant": merchant
-            })
-        
-        # Format data for prompt
-        category_summaries = ""
-        for category, txns in categories.items():
-            total = sum(t['amount'] for t in txns)
-            avg = total / len(txns) if txns else 0
-            category_summaries += f"\n{category}:\n"
-            category_summaries += f"- Total: ${total:.2f}\n"
-            category_summaries += f"- Average: ${avg:.2f}\n"
-            category_summaries += f"- Transactions: {len(txns)}\n"
-            category_summaries += "- Recent transactions:\n"
-            
-            for txn in sorted(txns, key=lambda x: x['date'], reverse=True)[:5]:
-                category_summaries += f"  * {txn['date']}: ${txn['amount']:.2f} at {txn['merchant']}\n"
-        
-        prompt = f"""
-        Analyze the following transaction data and identify any spending anomalies.
-        Look for unusual spending patterns, significant increases in specific categories,
-        or other financial behaviors that stand out.
-        
-        Transaction Data by Category:
-        {category_summaries}
-        
-        Identify up to 3 specific anomalies or unusual patterns in JSON format:
-        [
-          {{
-            "category": "Category name",
-            "description": "Detailed description of the anomaly",
-            "severity": "high/medium/low",
-            "amount": numeric amount (if applicable)
-          }}
-        ]
-        
-        If no clear anomalies are detected, return an empty array [].
-        
-        Anomalies JSON:
-        """
-        
-        response = self.model.generate_content(prompt)
-        
-        try:
-            # Try to extract JSON from the response
-            text = response.text
-            # Find JSON content between triple backticks if present
-            if "```json" in text and "```" in text.split("```json")[1]:
-                json_str = text.split("```json")[1].split("```")[0].strip()
-            elif "```" in text and "```" in text.split("```")[1]:
-                json_str = text.split("```")[1].split("```")[0].strip()
-            else:
-                json_str = text.strip()
-                
-            anomalies = json.loads(json_str)
-            
-            if not isinstance(anomalies, list):
-                raise ValueError("Response is not a list of anomalies")
-                
-            # Add detection date
-            for anomaly in anomalies:
-                anomaly["detection_date"] = datetime.now()
-                # Ensure all required fields exist
-                if "category" not in anomaly:
-                    anomaly["category"] = "Unknown"
-                if "description" not in anomaly:
-                    anomaly["description"] = "Unusual spending pattern detected"
-                if "severity" not in anomaly:
-                    anomaly["severity"] = "medium"
-                
-            return anomalies
-            
-        except Exception as e:
-            # Return empty list if parsing fails
-            return []
     
     async def generate_predictive_expenses(self, 
                                     transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

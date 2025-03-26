@@ -14,7 +14,7 @@ import {
   ThumbDown as ThumbDownIcon 
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
-import apiService from '../../services/api';
+import enhancedApiService from '../../services/enhanced-api.js';
 
 const RecommendationCard = ({ recommendation }) => {
   const { getUserId } = useAuth();
@@ -32,7 +32,7 @@ const RecommendationCard = ({ recommendation }) => {
   const handleFeedback = async (isHelpful) => {
     try {
       setIsSubmitting(true);
-      await apiService.submitFeedback(id, isHelpful);
+      await enhancedApiService.submitFeedback(id, isHelpful);
       setFeedbackSubmitted(true);
     } catch (error) {
       console.error('Error submitting feedback:', error);

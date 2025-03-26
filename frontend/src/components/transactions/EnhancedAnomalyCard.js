@@ -1,4 +1,4 @@
-/ src/components/transactions/EnhancedAnomalyCard.js
+// src/components/transactions/EnhancedAnomalyCard.js
 import React from 'react';
 import { 
   Card, 
@@ -16,7 +16,7 @@ import {
   Error as ErrorIcon,
   ArrowUpward as ArrowUpIcon
 } from '@mui/icons-material';
-import apiService from '../../services/enhanced-api';
+import enhancedApiService from '../../services/enhanced-api.js';
 
 const EnhancedAnomalyCard = ({ anomalies, onRefresh, onAcknowledge }) => {
   const theme = useTheme();
@@ -27,7 +27,7 @@ const EnhancedAnomalyCard = ({ anomalies, onRefresh, onAcknowledge }) => {
   
   const handleAcknowledge = async (anomalyId) => {
     try {
-      await apiService.acknowledgeAnomaly(anomalyId);
+      await enhancedApiService.acknowledgeAnomaly(anomalyId);
       
       if (onAcknowledge) {
         onAcknowledge(anomalyId);

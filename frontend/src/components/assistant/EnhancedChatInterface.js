@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ChatMessage from './ChatMessage';
-import apiService from '../../services/enhanced-api';
+import enhancedApiService  from '../../services/enhanced-api';
 import { useAuth } from '../../context/AuthContext';
 
 const EnhancedChatInterface = () => {
@@ -30,7 +30,7 @@ const EnhancedChatInterface = () => {
       try {
         setLoading(true);
         const userId = getUserId();
-        const history = await apiService.getChatHistory(userId);
+        const history = await enhancedApiService.getChatHistory(userId);
         setMessages(history);
       } catch (error) {
         console.error('Error fetching chat history:', error);
@@ -120,7 +120,7 @@ const EnhancedChatInterface = () => {
     
     try {
       // Use the streaming response from the enhanced API
-      const { fullResponse, insights } = await apiService.sendMessageStreaming(userId, inputMessage);
+      const { fullResponse, insights } = await enhancedApiService.sendMessageStreaming(userId, inputMessage);
       
       // Set the typing effect
       setTypingText(fullResponse);

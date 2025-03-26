@@ -1,4 +1,3 @@
-// src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import { Grid, Box, CircularProgress } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
@@ -7,7 +6,9 @@ import AIInsights from '../components/dashboard/AIInsights';
 import SpendingBreakdown from '../components/dashboard/SpendingBreakdown';
 import IncomeExpensesChart from '../components/dashboard/IncomeExpensesChart';
 import TopRecommendation from '../components/dashboard/TopRecommendation';
-import apiService from '../services/api';
+import AIGeneratedInsights from '../components/dashboard/AIGeneratedInsights';
+// Import the enhanced API service instead of the regular one
+import enhancedApiService from '../services/enhanced-api';
 import { spendingData, transactionData } from '../services/mockData';
 
 const Dashboard = ({ onNavigate }) => {
@@ -18,13 +19,13 @@ const Dashboard = ({ onNavigate }) => {
     balance: 0,
     income_bracket: '',
     financial_goals: '',
-     risk_profile: '', 
-     age:''
+    risk_profile: '', 
+    age:''
   });
   const [recommendations, setRecommendations] = useState([]);
+  const [insights, setInsights] = useState([]);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  // const { getUserId } = useAuth(); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,7 +35,7 @@ const Dashboard = ({ onNavigate }) => {
         
         // Try to fetch data from API
         try {
-          const data = await apiService.getDashboardData(userId);
+          const data = await enhancedApiService.getDashboardData(userId);
           setDashboardData(data);
         } catch (error) {
           console.error('Error fetching dashboard data:', error);
@@ -42,19 +43,30 @@ const Dashboard = ({ onNavigate }) => {
         }
         
         try {
-          const userProfileData = await apiService.getUserProfile(userId);
+          const userProfileData = await enhancedApiService.getUserProfile(userId);
           setUserData(userProfileData);
         } catch (error) {
           console.error('Error fetching user profile:', error);
         }
         
         try {
-          const recommendationsData = await apiService.getRecommendations(userId);
+          // Use enhanced recommendations instead of regular ones
+          const recommendationsData = await enhancedApiService.getEnhancedRecommendations(userId);
           if (recommendationsData && recommendationsData.length > 0) {
             setRecommendations(recommendationsData);
           }
         } catch (error) {
           console.error('Error fetching recommendations:', error);
+        }
+
+        try {
+          // Fetch user insights
+          const insightsData = await enhancedApiService.getUserInsights(userId);
+          if (insightsData && insightsData.length > 0) {
+            setInsights(insightsData);
+          }
+        } catch (error) {
+          console.error('Error fetching insights:', error);
         }
       } catch (error) {
         console.error('Error in fetchData:', error);
@@ -68,6 +80,20 @@ const Dashboard = ({ onNavigate }) => {
 
   const handleViewAllRecommendations = () => {
     onNavigate('recommendations');
+  };
+
+  const handleRefreshInsights = async () => {
+    try {
+      const userId = getUserId();
+      await enhancedApiService.refreshInsights(userId);
+      // Fetch updated insights
+      const insightsData = await enhancedApiService.getUserInsights(userId);
+      if (insightsData && insightsData.length > 0) {
+        setInsights(insightsData);
+      }
+    } catch (error) {
+      console.error('Error refreshing insights:', error);
+    }
   };
 
   if (loading) {
@@ -85,7 +111,11 @@ const Dashboard = ({ onNavigate }) => {
           <FinancialOverview userData={userData} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <AIInsights />
+          {insights.length > 0 ? (
+            <AIGeneratedInsights insights={insights} onRefresh={handleRefreshInsights} />
+          ) : (
+            <AIInsights />
+          )}
         </Grid>
         <Grid item xs={12} md={4}>
           <SpendingBreakdown spendingData={spendingData} />

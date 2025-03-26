@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import ChatMessage from './ChatMessage';
-import apiService from '../../services/api';
+import enhancedApiService from '../../services/enhanced-api.js';
 import { useAuth } from '../../context/AuthContext';
 
 const ChatInterface = () => {
@@ -30,7 +30,7 @@ const ChatInterface = () => {
       try {
         setLoading(true);
         const userId = getUserId();
-        const history = await apiService.getChatHistory(userId);
+        const history = await enhancedApiService.getChatHistory(userId);
         setMessages(history);
       } catch (error) {
         console.error('Error fetching chat history:', error);
@@ -64,7 +64,7 @@ const ChatInterface = () => {
     setSending(true);
     
     try {
-      const response = await apiService.sendMessage(userId, inputMessage);
+      const response = await enhancedApiService.sendMessage(userId, inputMessage);
       setMessages(prev => [...prev, {
         id: response.id,
         sender: 'assistant',

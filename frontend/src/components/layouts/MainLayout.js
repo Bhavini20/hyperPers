@@ -4,7 +4,7 @@ import { Box, Toolbar, CssBaseline } from '@mui/material';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import apiService from '../../services/api';
+import enhancedApiService from '../../services/enhanced-api.js';
 
 const MainLayout = ({ children, activeTab, onTabChange }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -24,7 +24,7 @@ const MainLayout = ({ children, activeTab, onTabChange }) => {
       try {
         const userId = getUserId();
         console.log(`Fetching user profile for ${userId}`);
-        const data = await apiService.getUserProfile(userId);
+        const data = await enhancedApiService.getUserProfile(userId);
         console.log('Received user data:', data);
         
         // Safely extract and transform user data

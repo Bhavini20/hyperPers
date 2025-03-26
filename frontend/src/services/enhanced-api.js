@@ -1,4 +1,3 @@
-// src/services/enhanced-api.js
 import axios from 'axios';
 import { userData, recommendations, transactionData, recentTransactions, chatMessages } from './mockData';
 
@@ -17,6 +16,11 @@ const api = axios.create({
 const getUserId = () => {
   return localStorage.getItem('userId') || 'user123';
 };
+
+
+if (!localStorage.getItem('userId')) {
+  localStorage.setItem('userId', 'user123');
+}
 
 // Helper function to get auth headers
 const getAuthHeader = () => {

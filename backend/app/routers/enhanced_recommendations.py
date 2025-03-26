@@ -1,4 +1,3 @@
-# app/routers/enhanced_recommendations.py
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from app.services.enhanced_recommendation import EnhancedRecommendationService
 from app.db.user_operations import UserOperations
@@ -35,6 +34,13 @@ async def get_enhanced_recommendations(user_id: str, refresh: bool = False, coun
             limit=count
         )
         
+        # Convert MongoDB datetime to ISO format string for JSON serialization
+        for rec in recommendations:
+            if 'timestamp' in rec and hasattr(rec['timestamp'], 'isoformat'):
+                rec['timestamp'] = rec['timestamp'].isoformat()
+            if 'expires_at' in rec and hasattr(rec['expires_at'], 'isoformat'):
+                rec['expires_at'] = rec['expires_at'].isoformat()
+        
         return recommendations
 
 @router.post("/{recommendation_id}/refresh")
@@ -53,6 +59,13 @@ async def refresh_recommendation(recommendation_id: str):
     
     # Get updated recommendation
     updated_recommendation = RecommendationOperations.get_recommendation_by_id(recommendation_id)
+    
+    # Convert MongoDB datetime to ISO format string for JSON serialization
+    if 'timestamp' in updated_recommendation and hasattr(updated_recommendation['timestamp'], 'isoformat'):
+        updated_recommendation['timestamp'] = updated_recommendation['timestamp'].isoformat()
+    if 'expires_at' in updated_recommendation and hasattr(updated_recommendation['expires_at'], 'isoformat'):
+        updated_recommendation['expires_at'] = updated_recommendation['expires_at'].isoformat()
+    
     return updated_recommendation
 
 @router.post("/compare")

@@ -1,5 +1,4 @@
-# app/routers/insights.py
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.services.insights_service import InsightsService
 from app.db.user_operations import UserOperations
 from typing import List, Dict, Any
@@ -30,6 +29,13 @@ async def get_user_insights(user_id: str):
                 insight.get("created_at", ""))
     
     sorted_insights = sorted(insights, key=sort_key, reverse=True)
+    
+    # Convert MongoDB datetime to ISO format string for JSON serialization
+    for insight in sorted_insights:
+        if 'created_at' in insight and hasattr(insight['created_at'], 'isoformat'):
+            insight['created_at'] = insight['created_at'].isoformat()
+        if 'expires_at' in insight and hasattr(insight['expires_at'], 'isoformat'):
+            insight['expires_at'] = insight['expires_at'].isoformat()
     
     return sorted_insights
 

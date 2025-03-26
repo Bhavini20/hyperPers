@@ -16,7 +16,7 @@ import {
   HighlightOff as CloseIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import apiService from '../../services/enhanced-api';
+import enhancedApiService from '../../services/enhanced-api.js';
 
 const InsightItem = ({ insight, onMarkRead, onActionTaken }) => {
   const theme = useTheme();
@@ -100,7 +100,7 @@ const InsightItem = ({ insight, onMarkRead, onActionTaken }) => {
 const AIGeneratedInsights = ({ insights, onRefresh }) => {
   const handleMarkRead = async (insight) => {
     try {
-      await apiService.markInsightRead(insight.user_id, insight.insight_id);
+      await enhancedApiService.markInsightRead(insight.user_id, insight.insight_id);
       
       // This would typically trigger a refresh of insights from parent component
       if (onRefresh) {
@@ -113,7 +113,7 @@ const AIGeneratedInsights = ({ insights, onRefresh }) => {
   
   const handleActionTaken = async (insight, acted) => {
     try {
-      await apiService.recordInsightAction(insight.user_id, insight.insight_id, acted);
+      await enhancedApiService.recordInsightAction(insight.user_id, insight.insight_id, acted);
       
       // This would typically trigger a refresh of insights from parent component
       if (onRefresh) {

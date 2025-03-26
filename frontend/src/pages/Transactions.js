@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Box, Typography, CircularProgress } from '@mui/material';
+import { Grid, Box, Typography, CircularProgress, Button } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import SentimentCard from '../components/transactions/SentimentCard';
-import AnomaliesCard from '../components/transactions/AnomaliesCard';
 import TransactionList from '../components/transactions/TransactionList';
 import PredictiveInsights from '../components/transactions/PredictiveInsights';
-import apiService from '../services/api';
+import EnhancedAnomalyCard from '../components/transactions/EnhancedAnomalyCard';
+// Import enhanced API service
+import enhancedApiService from '../services/enhanced-api';
 import { recentTransactions } from '../services/mockData';
 
 const Transactions = () => {
@@ -13,7 +14,9 @@ const Transactions = () => {
   const [transactions, setTransactions] = useState(recentTransactions); // Default to mock data
   const [analytics, setAnalytics] = useState(null);
   const [sentiment, setSentiment] = useState('neutral'); // Default value
+  const [anomalies, setAnomalies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshingAnomalies, setRefreshingAnomalies] = useState(false);
   
   useEffect(() => {
     const fetchTransactionData = async () => {
@@ -23,7 +26,7 @@ const Transactions = () => {
         
         // Fetch transaction history
         try {
-          const transactionData = await apiService.getTransactionHistory(userId);
+          const transactionData = await enhancedApiService.getTransactionHistory(userId);
           if (transactionData && transactionData.length > 0) {
             setTransactions(transactionData);
           }
@@ -34,7 +37,7 @@ const Transactions = () => {
         
         // Fetch analytics
         try {
-          const analyticsData = await apiService.getTransactionAnalytics(userId);
+          const analyticsData = await enhancedApiService.getTransactionAnalytics(userId);
           setAnalytics(analyticsData);
         } catch (error) {
           console.error('Error fetching transaction analytics:', error);
@@ -42,7 +45,7 @@ const Transactions = () => {
         
         // Fetch sentiment
         try {
-          const sentimentData = await apiService.getSentimentAnalysis(userId);
+          const sentimentData = await enhancedApiService.getSentimentAnalysis(userId);
           if (sentimentData && sentimentData.sentiment_analysis) {
             // Safely extract sentiment value with fallback
             setSentiment(sentimentData.sentiment_analysis.overall_sentiment || 'neutral');
@@ -50,6 +53,16 @@ const Transactions = () => {
         } catch (error) {
           console.error('Error fetching sentiment analysis:', error);
           // Using default 'neutral' sentiment
+        }
+
+        // Fetch anomalies
+        try {
+          const anomaliesData = await enhancedApiService.getAnomalies(userId);
+          if (anomaliesData && anomaliesData.length > 0) {
+            setAnomalies(anomaliesData);
+          }
+        } catch (error) {
+          console.error('Error fetching anomalies:', error);
         }
       } catch (error) {
         console.error('Error in fetchTransactionData:', error);
@@ -60,6 +73,39 @@ const Transactions = () => {
     
     fetchTransactionData();
   }, [getUserId]);
+
+  const handleRefreshAnomalies = async () => {
+    try {
+      setRefreshingAnomalies(true);
+      const userId = getUserId();
+      
+      // Use refresh=true parameter to force new anomaly detection
+      const anomaliesData = await enhancedApiService.getAnomalies(userId, true);
+      if (anomaliesData && anomaliesData.length > 0) {
+        setAnomalies(anomaliesData);
+      }
+    } catch (error) {
+      console.error('Error refreshing anomalies:', error);
+    } finally {
+      setRefreshingAnomalies(false);
+    }
+  };
+
+  const handleAcknowledgeAnomaly = async (anomalyId) => {
+    try {
+      await enhancedApiService.acknowledgeAnomaly(anomalyId);
+      // Update local state
+      setAnomalies(prevAnomalies => 
+        prevAnomalies.map(anomaly => 
+          anomaly.anomaly_id === anomalyId 
+            ? {...anomaly, is_acknowledged: true} 
+            : anomaly
+        )
+      );
+    } catch (error) {
+      console.error('Error acknowledging anomaly:', error);
+    }
+  };
   
   if (loading) {
     return (
@@ -83,7 +129,11 @@ const Transactions = () => {
           <SentimentCard sentiment={sentiment} />
         </Grid>
         <Grid item xs={12} md={6}>
-          <AnomaliesCard />
+          <EnhancedAnomalyCard 
+            anomalies={anomalies} 
+            onRefresh={handleRefreshAnomalies}
+            onAcknowledge={handleAcknowledgeAnomaly}
+          />
         </Grid>
       </Grid>
       

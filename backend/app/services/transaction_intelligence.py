@@ -1,8 +1,6 @@
-# app/services/transaction_intelligence.py
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import logging
-import asyncio
 import uuid
 
 from app.db.user_operations import UserOperations
@@ -230,7 +228,7 @@ class TransactionIntelligenceService:
             List of transactions with updated categories
         """
         # This would typically use a specialized GenAI method for categorization
-        # For now, we'll implement a simple mock categorization
+        # For now, we'll implement a simple rule-based categorization
         
         # Common merchant to category mappings
         merchant_categories = {

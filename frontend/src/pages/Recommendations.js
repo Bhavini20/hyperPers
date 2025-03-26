@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress, Button } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import RecommendationCard from '../components/recommendations/RecommendationCard';
-import apiService from '../services/api';
-// At the top of your file with other imports
+// Import enhanced API service and utils
+import enhancedApiService from '../services/enhanced-api';
 import { adaptRecommendationData } from '../utils';
 
 const Recommendations = () => {
   const { getUserId } = useAuth();
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -18,8 +19,8 @@ const Recommendations = () => {
         const userId = getUserId();
         console.log(`Fetching recommendations for user: ${userId}`);
         
-        // Make sure we're calling the recommendations endpoint, not users
-        const data = await apiService.getRecommendations(userId);
+        // Use enhanced recommendations instead of regular ones
+        const data = await enhancedApiService.getEnhancedRecommendations(userId);
         console.log('Received recommendations data:', data);
         
         // Adapt the data to match the expected format
@@ -38,6 +39,27 @@ const Recommendations = () => {
   
     fetchRecommendations();
   }, [getUserId]);
+
+  const handleRefreshRecommendations = async () => {
+    try {
+      setRefreshing(true);
+      const userId = getUserId();
+      
+      // Use refresh=true parameter to force new recommendations
+      const data = await enhancedApiService.getEnhancedRecommendations(userId, true);
+      
+      // Adapt the data to match the expected format
+      const adaptedData = Array.isArray(data) 
+        ? data.map(adaptRecommendationData)
+        : [];
+      
+      setRecommendations(adaptedData);
+    } catch (error) {
+      console.error('Error refreshing recommendations:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   if (loading) {
     return (
@@ -49,11 +71,20 @@ const Recommendations = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" gutterBottom>Your Personalized Recommendations</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Based on your financial profile, spending patterns, and goals
-        </Typography>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <Typography variant="h5" gutterBottom>Your Personalized Recommendations</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Based on your financial profile, spending patterns, and goals
+          </Typography>
+        </div>
+        <Button 
+          variant="contained" 
+          onClick={handleRefreshRecommendations}
+          disabled={refreshing}
+        >
+          {refreshing ? 'Refreshing...' : 'Refresh Recommendations'}
+        </Button>
       </Box>
       
       {recommendations.length > 0 ? (
@@ -65,7 +96,7 @@ const Recommendations = () => {
         ))
       ) : (
         <Typography variant="body1" color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          No recommendations available at this time.
+          No recommendations available at this time. Click "Refresh Recommendations" to generate new ones.
         </Typography>
       )}
     </Box>

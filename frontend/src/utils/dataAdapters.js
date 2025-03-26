@@ -1,3 +1,4 @@
+
 /**
  * Adapts recommendation data from API to the format expected by the RecommendationCard component
  * This helps handle different formats between mock data and actual API responses
@@ -21,7 +22,3 @@ export const adaptRecommendationData = (recommendation) => {
       features: recommendation.features || []
     };
   };
-  
-  /**
-   * You can add more adapter functions here in the future
-   */

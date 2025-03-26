@@ -14,7 +14,6 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
 
 # Initialize GenAI service
-
 genai_service = GenAIService()
 
 MAX_HISTORY_MESSAGES = 10  # Maximum number of messages to include in context
@@ -157,9 +156,6 @@ async def send_message_streaming(
     message: Dict[str, str] = Body(...)
 ):
     """Send a message to the AI assistant with streaming response"""
-    # This would be implemented to support streaming responses from GenAI models
-    # For now, just a placeholder showing the structure
-    
     # Check if user exists
     user = UserOperations.get_user_by_id(user_id)
     if not user:
@@ -170,24 +166,103 @@ async def send_message_streaming(
     if not text:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
+    # Get conversations for user
+    conversations = ChatOperations.get_user_conversations(user_id)
+    
+    # Get or create conversation ID
+    conversation_id = conversations[0] if conversations else str(uuid.uuid4())
+    
+    # Create user message
+    user_message = {
+        "conversation_id": conversation_id,
+        "user_id": user_id,
+        "sender": "user",
+        "text": text,
+        "timestamp": datetime.now()
+    }
+    
+    # Save user message
+    user_message_id = ChatOperations.create_message(user_message)
+    
+    # Get conversation history for context
+    chat_history = ChatOperations.get_conversation_messages(
+        conversation_id, 
+        limit=MAX_HISTORY_MESSAGES
+    )
+    
+    # Get transaction history for context
+    transaction_history = TransactionOperations.get_user_transactions(
+        user_id=user_id,
+        limit=20,
+        sort_by="timestamp",
+        sort_order=-1
+    )
+    
     async def event_generator():
-        # In a real implementation, this would stream tokens from the AI model
-        response_parts = [
-            "Based on your transaction history, ",
-            "I can see that you've been spending an average of $420 per month on dining. ",
-            "This represents about 15% of your total monthly expenses. ",
-            "This is slightly higher than the recommended budget allocation of 10%. ",
-            "You might want to consider reducing your dining expenses to around $280 per month ",
-            "which would free up $140 for your emergency fund goal."
-        ]
+        # In real implementation, this would stream tokens from the AI model
+        # For now, let's simulate streaming with a simple approach
+        full_response = ""
         
-        # Send each part with a small delay to simulate streaming
-        for part in response_parts:
-            yield {"data": part}
-            await asyncio.sleep(0.5)
+        try:
+            # Generate response (non-streaming for now)
+            full_response = await genai_service.generate_financial_advice(
+                user_profile=user,
+                user_query=text,
+                transaction_history=transaction_history,
+                chat_history=chat_history
+            )
             
-        # Final event to signal completion
-        yield {"data": "[DONE]"}
+            # Split response into words
+            words = full_response.split()
+            
+            # Stream response in small chunks
+            for i in range(0, len(words), 2):
+                chunk = ' '.join(words[i:i+2])
+                yield {"data": chunk + " "}
+                await asyncio.sleep(0.2)  # Simulate delay
+            
+            # Final event to signal completion
+            yield {"data": "[DONE]"}
+            
+            # Save complete response in database
+            assistant_message = {
+                "conversation_id": conversation_id,
+                "user_id": user_id,
+                "sender": "assistant",
+                "text": full_response,
+                "timestamp": datetime.now(),
+                "context": {
+                    "previous_message_id": user_message_id
+                },
+                "metadata": {
+                    "generation_time": datetime.now().isoformat(),
+                    "genai_generated": True,
+                    "streamed": True
+                }
+            }
+            
+            # Save assistant message
+            ChatOperations.create_message(assistant_message)
+            
+        except Exception as e:
+            logger.error(f"Error in streaming response: {str(e)}")
+            yield {"data": "I'm sorry, I encountered an issue while processing your request."}
+            yield {"data": "[DONE]"}
+            
+            # Save error message
+            error_message = {
+                "conversation_id": conversation_id,
+                "user_id": user_id,
+                "sender": "assistant",
+                "text": "I'm sorry, I encountered an issue while processing your request. Could you please try again?",
+                "timestamp": datetime.now(),
+                "context": {
+                    "previous_message_id": user_message_id,
+                    "error": str(e)
+                }
+            }
+            
+            ChatOperations.create_message(error_message)
     
     return EventSourceResponse(event_generator())
 
