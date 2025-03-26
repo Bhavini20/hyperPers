@@ -5,7 +5,7 @@ from app.utils.mock_data import populate_mock_data
 from app.routers import users, products, recommendations, sentiment
 from app.routers import auth
 from app.routers import dashboard
-from app.routers import chat
+# from app.routers import chat
 from app.routers import transactions
 from app.routers import insights
 from app.routers import transaction_intelligence
@@ -35,7 +35,7 @@ app.include_router(products.router)
 app.include_router(recommendations.router)
 app.include_router(sentiment.router)
 app.include_router(dashboard.router)
-app.include_router(chat.router)
+# app.include_router(chat.router)
 app.include_router(transactions.router)
 app.include_router(insights.router)
 app.include_router(transaction_intelligence.router)

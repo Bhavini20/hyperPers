@@ -2,13 +2,13 @@ from typing import Dict, List, Any, Optional
 import os
 import json
 from datetime import datetime
-import google.generativeai as genai
+# import google.generativeai as genai
 # from google.generativeai.types import HarmCategory, HarmBlockThreshold
-# from google import genai
+from google import genai
 
 # Configure API key
 API_KEY = os.getenv("GENAI_API_KEY")
-genai.configure(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+# genai.configure(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
 
 class GenAIService:
     """
@@ -18,7 +18,7 @@ class GenAIService:
     
     def __init__(self):
         """Initialize the GenAI service with model configuration"""
-        self.models = genai.list_models()
+        # self.models = genai.list_models()
         # Use a suitable text model from available models
         # Usually this will be a model with "gemini" in the name
         self.model_name = "gemini-pro"
@@ -89,9 +89,13 @@ class GenAIService:
         full_prompt = f"{system_prompt}\n\n{profile_summary}\n\n{transaction_summary}\n\n{chat_context}\n\nUser Question: {user_query}\n\nYour response:"
         
         # Generate response from GenAI model
-        response = self.model.generate_content(full_prompt)
-        
-        return response.text
+        # response = self.model.generate_content(full_prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=full_prompt)
+        # print(response)
+        return response
     
     async def generate_product_recommendation(self, 
                                        user_profile: Dict[str, Any], 
@@ -153,12 +157,12 @@ class GenAIService:
         full_prompt = f"{system_prompt}\n\n{profile_summary}\n\n{product_summary}\n\n{transaction_info}\n\nGenerate a personalized recommendation explanation:"
         
         # Generate recommendation text
-        response = self.model.generate_content(full_prompt)
-        # client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
-        # response = client.models.generate_content(
-        #     model="gemini-2.0-flash",
-        #     contents=full_prompt)
-        
+        # response = self.model.generate_content(full_prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=full_prompt)
+        print(response)
         # Generate a match score based on the user profile and product
         score_prompt = f"""
         Based on the following user profile and product information, calculate a match score from 0-100.
@@ -170,8 +174,11 @@ class GenAIService:
         
         Match Score (0-100):
         """
-        
-        score_response = self.model.generate_content(score_prompt)
+        score_response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=score_prompt)
+        # score_response = self.model.generate_content()
+        print(score_response)
         
         try:
             # Extract numeric score from response
@@ -232,8 +239,12 @@ class GenAIService:
         JSON Response:
         """
         
-        response = self.model.generate_content(prompt)
-        
+        # response = self.model.generate_content(prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt)
+        print(response)
         # Parse the JSON response
         try:
             # Try to extract JSON from the response
@@ -334,7 +345,12 @@ class GenAIService:
         Anomalies JSON:
         """
         
-        response = self.model.generate_content(prompt)
+        # response = self.model.generate_content(prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt)
+        print(response)
         
         try:
             # Try to extract JSON from the response
@@ -446,7 +462,12 @@ class GenAIService:
         Insights JSON:
         """
         
-        response = self.model.generate_content(prompt)
+        # response = self.model.generate_content(prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt)
+        print(response)
         
         try:
             # Try to extract JSON from the response
@@ -559,7 +580,12 @@ class GenAIService:
         Predictions JSON Array:
         """
         
-        response = self.model.generate_content(prompt)
+        # response = self.model.generate_content(prompt)
+        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt)
+        print(response)
         
         try:
             # Try to extract JSON from the response

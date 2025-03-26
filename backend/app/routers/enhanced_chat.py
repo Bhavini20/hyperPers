@@ -96,7 +96,7 @@ async def send_message(
             transaction_history=transaction_history,
             chat_history=chat_history
         )
-        
+        print("AI RESPONSE",ai_response)
         # Create assistant message
         assistant_message = {
             "conversation_id": conversation_id,
@@ -118,7 +118,7 @@ async def send_message(
         
         # Get the complete message
         assistant_response = ChatOperations.get_message_by_id(message_id)
-        
+        print("ASSISTANT RESPINSE",assistant_response)
         # If background tasks available, run analysis task
         if background_tasks:
             background_tasks.add_task(analyze_chat_message, user_id, text, ai_response)
@@ -154,13 +154,13 @@ async def send_message(
 async def send_message_streaming(
     user_id: str, 
     message: Dict[str, str] = Body(...)
-):
+):  
     """Send a message to the AI assistant with streaming response"""
     # Check if user exists
     user = UserOperations.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+    print("HIT MESSAGE")
     # Get text from message
     text = message.get("message", "")
     if not text:
@@ -211,6 +211,7 @@ async def send_message_streaming(
                 transaction_history=transaction_history,
                 chat_history=chat_history
             )
+            print("FULL RESPONSE", full_response)
             
             # Split response into words
             words = full_response.split()
@@ -240,7 +241,7 @@ async def send_message_streaming(
                     "streamed": True
                 }
             }
-            
+            print(assistant_message)
             # Save assistant message
             ChatOperations.create_message(assistant_message)
             

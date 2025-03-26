@@ -33,6 +33,7 @@ class ChatOperations:
             message_data["conversation_id"] = str(uuid.uuid4())
             
         result = chat_messages_collection.insert_one(message_data)
+        print("RESULTS",result.inserted_id)
         return str(result.inserted_id)
     
     @staticmethod

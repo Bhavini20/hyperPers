@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { userData, recommendations, transactionData, recentTransactions, chatMessages } from './mockData';
+import { userData, recommendations, transactionData, chatMessages } from './mockData';
 
 // API base URL
 const API_BASE_URL = 'http://localhost:8000';
@@ -253,8 +253,8 @@ const enhancedApiService = {
   },
   
   refreshInsights: async (specificUserId = null) => {
+    const userId = specificUserId || getUserId();
     try {
-      const userId = specificUserId || getUserId();
       const response = await api.post(`/insights/${userId}/refresh`, {}, {
         headers: getAuthHeader()
       });
@@ -421,7 +421,7 @@ const enhancedApiService = {
       
       // First, check if the real API endpoint is available
       try {
-        const streamingUrl = `${API_BASE_URL}/chat/${userId}/message/stream`;
+        const streamingUrl = `${API_BASE_URL}/users/user123`;
         const eventSource = new EventSource(streamingUrl);
         
         return new Promise((resolve, reject) => {
@@ -438,17 +438,15 @@ const enhancedApiService = {
               fullResponse += event.data;
             }
           };
-          
           eventSource.onerror = (error) => {
             eventSource.close();
             reject(error);
           };
-          
           // Send the message to start the stream
           api.post(`/chat/${userId}/message`, 
             { message: messageText },
             { headers: getAuthHeader() }
-          );
+          ); 
         });
       } catch (error) {
         // Fall back to mock streaming
