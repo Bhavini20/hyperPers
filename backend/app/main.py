@@ -8,6 +8,10 @@ from app.routers import dashboard
 from app.routers import chat
 from app.routers import auth
 from app.routers import transactions  # Import the new transactions router
+from app.routers import insights
+from app.routers import transaction_intelligence
+from app.routers import enhanced_recommendations
+from app.routers import enhanced_chat
 
 
 app = FastAPI(
@@ -34,6 +38,10 @@ app.include_router(sentiment.router)
 app.include_router(dashboard.router)
 app.include_router(chat.router)
 app.include_router(transactions.router)  # Add the transactions router
+app.include_router(insights.router)
+app.include_router(transaction_intelligence.router)
+app.include_router(enhanced_recommendations.router)
+app.include_router(enhanced_chat.router)
 
 @app.on_event("startup")
 async def startup_event():
