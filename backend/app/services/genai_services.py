@@ -153,11 +153,11 @@ class GenAIService:
         full_prompt = f"{system_prompt}\n\n{profile_summary}\n\n{product_summary}\n\n{transaction_info}\n\nGenerate a personalized recommendation explanation:"
         
         # Generate recommendation text
-        # response = self.model.generate_content(full_prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=full_prompt)
+        response = self.model.generate_content(full_prompt)
+        # client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        # response = client.models.generate_content(
+        #     model="gemini-2.0-flash",
+        #     contents=full_prompt)
         
         # Generate a match score based on the user profile and product
         score_prompt = f"""
