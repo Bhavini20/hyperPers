@@ -31,9 +31,9 @@ class ChatOperations:
         # Generate conversation_id if not provided
         if "conversation_id" not in message_data:
             message_data["conversation_id"] = str(uuid.uuid4())
-            
+        
         result = chat_messages_collection.insert_one(message_data)
-        print("RESULTS",result.inserted_id)
+        print("DONE")
         return str(result.inserted_id)
     
     @staticmethod

@@ -421,34 +421,38 @@ const enhancedApiService = {
       
       // First, check if the real API endpoint is available
       try {
-        const streamingUrl = `${API_BASE_URL}/chat/${userId}/message/stream?message=${encodeURIComponent(messageText)}`;
-        const eventSource = new EventSource(streamingUrl);
+        // const streamingUrl = `${API_BASE_URL}/chat/${userId}/message/stream?message=${encodeURIComponent(messageText)}`;
+        // const eventSource = new EventSource(streamingUrl);
         
-        return new Promise((resolve, reject) => {
-          let fullResponse = '';
+        return api.post(`/chat/${userId}/message`, 
+          { message: messageText },
+          { headers: getAuthHeader() }
+        ); 
+        // return new Promise((resolve, reject) => {
+        //   let fullResponse = '';
           
-          eventSource.onmessage = (event) => {
-            if (event.data === '[DONE]') {
-              eventSource.close();
-              resolve({ 
-                fullResponse, 
-                insights: [] // No insights in this case
-              });
-            } else {
-              fullResponse += event.data;
-            }
-          };
-          console.log(fullResponse)
-          eventSource.onerror = (error) => {
-            eventSource.close();
-            reject(error);
-          };
-          // Send the message to start the stream
-          api.post(`/chat/${userId}/message`, 
-            { message: messageText },
-            { headers: getAuthHeader() }
-          ); 
-        });
+        //   eventSource.onmessage = (event) => {
+        //     if (event.data === '[DONE]') {
+        //       eventSource.close();
+        //       resolve({ 
+        //         fullResponse, 
+        //         insights: [] // No insights in this case
+        //       });
+        //     } else {
+        //       fullResponse += event.data;
+        //     }
+        //   };
+        //   console.log(fullResponse)
+        //   eventSource.onerror = (error) => {
+        //     eventSource.close();
+        //     reject(error);
+        //   };
+        //   // Send the message to start the stream
+        //   api.post(`/chat/${userId}/message`, 
+        //     { message: messageText },
+        //     { headers: getAuthHeader() }
+        //   ); 
+        // });
       } catch (error) {
         // Fall back to mock streaming
         console.log('Using mock streaming implementation');

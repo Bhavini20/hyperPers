@@ -96,7 +96,7 @@ async def send_message(
             transaction_history=transaction_history,
             chat_history=chat_history
         )
-        print("AI RESPONSE",ai_response)
+        # print("AI RESPONSE", ai_response.text.candidates[0].content.parts[0].text)
         # Create assistant message
         assistant_message = {
             "conversation_id": conversation_id,
@@ -112,18 +112,19 @@ async def send_message(
                 "genai_generated": True
             }
         }
-        
+        print("HERE 1")
         # Save assistant message
-        message_id = ChatOperations.create_message(assistant_message)
+        # message_id = ChatOperations.create_message(assistant_message)
         
         # Get the complete message
-        assistant_response = ChatOperations.get_message_by_id(message_id)
-        print("ASSISTANT RESPINSE",assistant_response)
+        # assistant_response = ChatOperations.get_message_by_id(message_id)
+        print("ASSISTANT RESPINSE",assistant_message)
         # If background tasks available, run analysis task
         if background_tasks:
             background_tasks.add_task(analyze_chat_message, user_id, text, ai_response)
         
-        return assistant_response
+        print("returning")
+        return assistant_message
         
     except Exception as e:
         # Log the error
@@ -148,7 +149,7 @@ async def send_message(
         # Get the complete message
         fallback_response = ChatOperations.get_message_by_id(message_id)
         
-        return fallback_response
+        return fallback_message
     
 
 @router.get("/{user_id}/message/stream")
@@ -183,7 +184,7 @@ async def send_message_streaming(
     
     # Save user message
     user_message_id = ChatOperations.create_message(user_message)
-    
+    assistant_message = ''
     # Get conversation history for context
     chat_history = ChatOperations.get_conversation_messages(
         conversation_id, 
@@ -197,71 +198,69 @@ async def send_message_streaming(
         sort_by="timestamp",
         sort_order=-1
     )
-    
-    async def event_generator():
-        try:
-            # Generate response (non-streaming for now)
-            full_response = await genai_service.generate_financial_advice(
-                user_profile=user,
-                user_query=message,
-                transaction_history=transaction_history,
-                chat_history=chat_history
-            )
-            print("FULL RESPONSE", type(full_response))
-            
-            # Split response into words
-            words = str(full_response).split()
-            
-            # Stream response in small chunks
-            for i in range(0, len(words), 2):
-                chunk = ' '.join(words[i:i+2])
-                yield f"data: {chunk}\n\n"  # Corrected format for SSE
-                await asyncio.sleep(0.2)  # Simulate delay
-            
-            # Final event to signal completion
-            yield f"data: [DONE]\n\n"
-            
-            # Save complete response in database
-            assistant_message = {
-                "conversation_id": conversation_id,
-                "user_id": user_id,
-                "sender": "assistant",
-                "text": full_response,
-                "timestamp": datetime.now(),
-                "context": {
-                    "previous_message_id": user_message_id
-                },
-                "metadata": {
-                    "generation_time": datetime.now().isoformat(),
-                    "genai_generated": True,
-                    "streamed": True
-                }
+    try:
+        # Generate response (non-streaming for now)
+        full_response = await genai_service.generate_financial_advice(
+            user_profile=user,
+            user_query=message,
+            transaction_history=transaction_history,
+            chat_history=chat_history
+        )
+        print("FULL RESPONSE", type(full_response))
+        
+        # Split response into words
+        words = str(full_response).split()
+        
+        # Stream response in small chunks
+        for i in range(0, len(words), 2):
+            chunk = ' '.join(words[i:i+2])
+            yield f"data: {chunk}\n\n"  # Corrected format for SSE
+            await asyncio.sleep(0.2)  # Simulate delay
+        
+        # Final event to signal completion
+        yield f"data: [DONE]\n\n"
+        
+        # Save complete response in database
+        assistant_message = {
+            "conversation_id": conversation_id,
+            "user_id": user_id,
+            "sender": "assistant",
+            "text": full_response,
+            "timestamp": datetime.now(),
+            "context": {
+                "previous_message_id": user_message_id
+            },
+            "metadata": {
+                "generation_time": datetime.now().isoformat(),
+                "genai_generated": True,
+                "streamed": True
             }
-            print(assistant_message)
-            # Save assistant message
-            ChatOperations.create_message(assistant_message)
-            
-        except Exception as e:
-            logger.error(f"Error in streaming response: {str(e)}")
-            yield f"data: I'm sorry, I encountered an issue while processing your request.\n\n"
-            yield f"data: [DONE]\n\n"
-            
-            # Save error message
-            error_message = {
-                "conversation_id": conversation_id,
-                "user_id": user_id,
-                "sender": "assistant",
-                "text": "I'm sorry, I encountered an issue while processing your request. Could you please try again?",
-                "timestamp": datetime.now(),
-                "context": {
-                    "previous_message_id": user_message_id,
-                    "error": str(e)
-                }
+        }
+        print(assistant_message)
+        # Save assistant message
+        ChatOperations.create_message(assistant_message)
+        # return assistant_message
+    except Exception as e:
+        logger.error(f"Error in streaming response: {str(e)}")
+        yield f"data: I'm sorry, I encountered an issue while processing your request.\n\n"
+        yield f"data: [DONE]\n\n"
+        
+        # Save error message
+        error_message = {
+            "conversation_id": conversation_id,
+            "user_id": user_id,
+            "sender": "assistant",
+            "text": "I'm sorry, I encountered an issue while processing your request. Could you please try again?",
+            "timestamp": datetime.now(),
+            "context": {
+                "previous_message_id": user_message_id,
+                "error": str(e)
             }
-            
-            ChatOperations.create_message(error_message)
-    
-    return EventSourceResponse(event_generator())
+        }
+        
+        ChatOperations.create_message(error_message)
+        # return error_message
+
 
 async def analyze_chat_message(user_id: str, user_message: str, ai_response: str):
     """

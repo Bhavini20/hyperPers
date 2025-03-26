@@ -120,16 +120,16 @@ const EnhancedChatInterface = () => {
     
     try {
       // Use the streaming response from the enhanced API
-      const { fullResponse, insights } = await enhancedApiService.sendMessageStreaming(userId, inputMessage);
-      
+      const fullResponse = await enhancedApiService.sendMessageStreaming(userId, inputMessage);
+      console.log(fullResponse)
       // Set the typing effect
       setTypingText(fullResponse);
       setIsTyping(true);
       
-      // Update related insights if any
-      if (insights && insights.length > 0) {
-        setRelatedInsights(insights);
-      }
+      // // Update related insights if any
+      // if (insights && insights.length > 0) {
+      //   setRelatedInsights(insights);
+      // }
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [

@@ -86,7 +86,7 @@ class GenAIService:
                 chat_context += f"{sender}: {msg.get('text', '')}\n"
         
         # Combine all context for the prompt
-        full_prompt = f"{system_prompt}\n\n{profile_summary}\n\n{transaction_summary}\n\n{chat_context}\n\nUser Question: {user_query}\n\nYour response:"
+        full_prompt = f"{system_prompt}\n\n{profile_summary}\n\n{transaction_summary}\n\n{chat_context}\n\nUser Question: {user_query}\n\nYour response in less than 50 words:"
         
         # Generate response from GenAI model
         # response = self.model.generate_content(full_prompt)
@@ -94,8 +94,9 @@ class GenAIService:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=full_prompt)
-        print(type(response))
-        return response
+        print(response.candidates[0].content.parts[0].text)
+        return response.candidates[0].content.parts[0].text;
+
     
     async def generate_product_recommendation(self, 
                                        user_profile: Dict[str, Any], 
