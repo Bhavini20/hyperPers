@@ -83,6 +83,21 @@ class MockEventSource {
 
 // Extended API service with GenAI capabilities
 const enhancedApiService = {
+
+  // Submit recommendation feedback
+  submitFeedback: async (recommendationId, isHelpful) => {
+    try {
+      const response = await api.post(
+        `/recommendations/${recommendationId}/feedback`, 
+        { is_helpful: isHelpful },
+        { headers: getAuthHeader() }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      return { status: 'success' }; // Mock success for hackathon
+    }
+  },
   // User data
   getUserProfile: async (specificUserId = null) => {
     try {

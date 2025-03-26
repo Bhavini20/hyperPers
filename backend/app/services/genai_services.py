@@ -8,7 +8,7 @@ from google import genai
 
 # Configure API key
 API_KEY = os.getenv("GENAI_API_KEY")
-# genai.configure(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+# genai.configure(api_key = API_KEY)
 
 class GenAIService:
     """
@@ -90,7 +90,7 @@ class GenAIService:
         
         # Generate response from GenAI model
         # response = self.model.generate_content(full_prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        client = genai.Client(api_key = API_KEY)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=full_prompt)
@@ -159,7 +159,7 @@ class GenAIService:
         
         # Generate recommendation text
         # response = self.model.generate_content(full_prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        client = genai.Client(api_key = API_KEY)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=full_prompt)
@@ -241,7 +241,7 @@ class GenAIService:
         """
         
         # response = self.model.generate_content(prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        client = genai.Client(api_key = API_KEY)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt)
@@ -347,7 +347,7 @@ class GenAIService:
         """
         
         # response = self.model.generate_content(prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        client = genai.Client(api_key = API_KEY)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt)
@@ -464,7 +464,7 @@ class GenAIService:
         """
         
         # response = self.model.generate_content(prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        client = genai.Client(api_key = API_KEY)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt)
@@ -582,7 +582,7 @@ class GenAIService:
         """
         
         # response = self.model.generate_content(prompt)
-        client = genai.Client(api_key="AIzaSyAGDS1qcT-mOoL7tfSZ-vhfUKXrwaMNW68")
+        client = genai.Client(api_key = API_KEY)
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=prompt)
