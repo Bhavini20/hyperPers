@@ -96,6 +96,7 @@ class EnhancedRecommendationService:
                         product=product,
                         transaction_history=transactions
                     )
+                    # print(recommendation_data)
                     
                     # Extract data from the GenAI response
                     recommendation_text = recommendation_data.get("recommendation_text", "")
@@ -136,7 +137,8 @@ class EnhancedRecommendationService:
                     
                     # Save to database using recommendation operations
                     rec_id = RecommendationOperations.create_recommendation(recommendation)
-                    
+                    recommendation["_id"] = str(recommendation.pop("_id"))
+                    # print(type(recommendation["_id"]))
                     # Add to return list
                     recommendation_records.append(recommendation)
                     
@@ -144,7 +146,7 @@ class EnhancedRecommendationService:
                     logger.error(f"Error generating recommendation for product {product['product_id']}: {str(e)}")
                     continue
             
-            logger.info(f"Generated {len(recommendation_records)} recommendations for user {user_id} from {processed_products} products")
+            print(f"Generated {len(recommendation_records)} recommendations for user {user_id} from {processed_products} products")
             return recommendation_records
             
         except Exception as e:

@@ -3,7 +3,7 @@ from app.services.enhanced_recommendation import EnhancedRecommendationService
 from app.db.user_operations import UserOperations
 from app.db.recommendation_operations import RecommendationOperations
 from typing import List, Dict, Any
-import logging
+import logging, json
 
 router = APIRouter(prefix="/enhanced-recommendations", tags=["enhanced-recommendations"])
 logger = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ async def get_enhanced_recommendations(user_id: str, refresh: bool = False, coun
     if refresh:
         # Generate new recommendations
         recommendations = await recommendation_service.generate_recommendations(user_id, count)
+        print(recommendations)
         return recommendations
     else:
         # Get existing recommendations

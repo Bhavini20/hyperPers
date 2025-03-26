@@ -421,7 +421,7 @@ const enhancedApiService = {
       
       // First, check if the real API endpoint is available
       try {
-        const streamingUrl = `${API_BASE_URL}/users/user123`;
+        const streamingUrl = `${API_BASE_URL}/chat/${userId}/message/stream?message=${encodeURIComponent(messageText)}`;
         const eventSource = new EventSource(streamingUrl);
         
         return new Promise((resolve, reject) => {
@@ -438,6 +438,7 @@ const enhancedApiService = {
               fullResponse += event.data;
             }
           };
+          console.log(fullResponse)
           eventSource.onerror = (error) => {
             eventSource.close();
             reject(error);

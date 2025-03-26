@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Depends, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Body, Depends, BackgroundTasks, Query
 from app.db.chat_operations import ChatOperations
 from app.db.user_operations import UserOperations
 from app.db.transaction_operations import TransactionOperations
@@ -149,21 +149,21 @@ async def send_message(
         fallback_response = ChatOperations.get_message_by_id(message_id)
         
         return fallback_response
+    
 
-@router.post("/{user_id}/message/stream")
+@router.get("/{user_id}/message/stream")
 async def send_message_streaming(
     user_id: str, 
-    message: Dict[str, str] = Body(...)
+    message: str = Query(..., description="Message text")
 ):  
     """Send a message to the AI assistant with streaming response"""
     # Check if user exists
     user = UserOperations.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    print("HIT MESSAGE")
+    
     # Get text from message
-    text = message.get("message", "")
-    if not text:
+    if not message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
     # Get conversations for user
@@ -177,7 +177,7 @@ async def send_message_streaming(
         "conversation_id": conversation_id,
         "user_id": user_id,
         "sender": "user",
-        "text": text,
+        "text": message,
         "timestamp": datetime.now()
     }
     
@@ -199,31 +199,27 @@ async def send_message_streaming(
     )
     
     async def event_generator():
-        # In real implementation, this would stream tokens from the AI model
-        # For now, let's simulate streaming with a simple approach
-        full_response = ""
-        
         try:
             # Generate response (non-streaming for now)
             full_response = await genai_service.generate_financial_advice(
                 user_profile=user,
-                user_query=text,
+                user_query=message,
                 transaction_history=transaction_history,
                 chat_history=chat_history
             )
-            print("FULL RESPONSE", full_response)
+            print("FULL RESPONSE", type(full_response))
             
             # Split response into words
-            words = full_response.split()
+            words = str(full_response).split()
             
             # Stream response in small chunks
             for i in range(0, len(words), 2):
                 chunk = ' '.join(words[i:i+2])
-                yield {"data": chunk + " "}
+                yield f"data: {chunk}\n\n"  # Corrected format for SSE
                 await asyncio.sleep(0.2)  # Simulate delay
             
             # Final event to signal completion
-            yield {"data": "[DONE]"}
+            yield f"data: [DONE]\n\n"
             
             # Save complete response in database
             assistant_message = {
@@ -247,8 +243,8 @@ async def send_message_streaming(
             
         except Exception as e:
             logger.error(f"Error in streaming response: {str(e)}")
-            yield {"data": "I'm sorry, I encountered an issue while processing your request."}
-            yield {"data": "[DONE]"}
+            yield f"data: I'm sorry, I encountered an issue while processing your request.\n\n"
+            yield f"data: [DONE]\n\n"
             
             # Save error message
             error_message = {

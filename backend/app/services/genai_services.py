@@ -94,7 +94,7 @@ class GenAIService:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=full_prompt)
-        # print(response)
+        print(type(response))
         return response
     
     async def generate_product_recommendation(self, 
@@ -162,7 +162,7 @@ class GenAIService:
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=full_prompt)
-        print(response)
+        # print(response)
         # Generate a match score based on the user profile and product
         score_prompt = f"""
         Based on the following user profile and product information, calculate a match score from 0-100.
@@ -178,7 +178,7 @@ class GenAIService:
             model="gemini-2.0-flash",
             contents=score_prompt)
         # score_response = self.model.generate_content()
-        print(score_response)
+        # print(score_response)
         
         try:
             # Extract numeric score from response
