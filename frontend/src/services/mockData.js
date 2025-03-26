@@ -122,22 +122,7 @@ export const upcomingExpenses = [
 export const chatMessages = [
   {
     id: 1,
-    sender: "user",
-    text: "How much am I spending on dining out each month?"
-  },
-  {
-    id: 2,
     sender: "assistant",
-    text: "In the last 3 months, you've spent an average of $428 per month on dining out. This represents about 12% of your total monthly expenses. This is 15% higher than the previous 3 months, when you averaged $372 per month on dining."
-  },
-  {
-    id: 3,
-    sender: "user",
-    text: "What's the best way for me to save for a home down payment?"
-  },
-  {
-    id: 4,
-    sender: "assistant",
-    text: "Based on your financial profile and goal to purchase a home in the next 3 years, I recommend:\n\n1. Increase your monthly savings by $300 by reducing entertainment expenses\n2. Open a high-yield savings account for your down payment fund (Premium Savings Account has a 2.5% APY)\n3. Set up automatic transfers of $850/month to this account\n\nThis approach will help you save approximately $32,400 in 3 years, plus interest, which would be sufficient for a 10% down payment on a $320,000 home."
+    text: "Hi! How can I help you today?"
   }
 ];

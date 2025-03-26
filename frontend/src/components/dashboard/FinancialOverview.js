@@ -15,7 +15,7 @@ const FinancialOverview = ({ userData }) => {
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="body2" color="text.secondary">Risk Profile</Typography>
-          <Typography variant="body1" color="primary.main" fontWeight="medium">{userData.riskProfile}</Typography>
+          <Typography variant="body1" color="primary.main" fontWeight="medium">{userData.risk_profile}</Typography>
         </Box>
         
         <Divider sx={{ my: 2 }} />

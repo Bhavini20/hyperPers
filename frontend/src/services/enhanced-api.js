@@ -414,6 +414,19 @@ const enhancedApiService = {
     }
   },
   
+  getTransactionHistory: async (specificUserId = null, limit = 50) => {
+    try {
+      const userId = specificUserId || getUserId();
+      const response = await api.get(`/transactions/${userId}?limit=${limit}`, {
+        headers: getAuthHeader()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      return transactionData; // Fallback to mock data
+    }
+  },
+
   sendMessageStreaming: async (userId, messageText) => {
     try {
       // In a real implementation, this would use Server-Sent Events (SSE)
@@ -424,10 +437,12 @@ const enhancedApiService = {
         // const streamingUrl = `${API_BASE_URL}/chat/${userId}/message/stream?message=${encodeURIComponent(messageText)}`;
         // const eventSource = new EventSource(streamingUrl);
         
-        return api.post(`/chat/${userId}/message`, 
+        const response= api.post(`/chat/${userId}/message`, 
           { message: messageText },
           { headers: getAuthHeader() }
         ); 
+        console.log(response)
+        return response;
         // return new Promise((resolve, reject) => {
         //   let fullResponse = '';
           

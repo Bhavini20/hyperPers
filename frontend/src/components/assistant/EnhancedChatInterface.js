@@ -52,23 +52,27 @@ const EnhancedChatInterface = () => {
     if (isTyping && typingText) {
       const messageParts = typingText.split(' ');
       let currentIndex = 0;
+      let currentText = ''; // Keep track of the current text
       
       const typingInterval = setInterval(() => {
         if (currentIndex < messageParts.length) {
           const wordCount = Math.min(3, messageParts.length - currentIndex);
           const nextWords = messageParts.slice(currentIndex, currentIndex + wordCount).join(' ');
           
+          // Update currentText
+          currentText += (currentText ? ' ' : '') + nextWords;
+          
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
             
             if (lastMessage && lastMessage.sender === 'assistant' && lastMessage.isTyping) {
-              lastMessage.text += ' ' + nextWords;
+              lastMessage.text = currentText; // Update the text directly
             } else {
               newMessages.push({
                 id: Date.now(),
                 sender: 'assistant',
-                text: nextWords,
+                text: currentText,
                 isTyping: true
               });
             }
@@ -96,11 +100,12 @@ const EnhancedChatInterface = () => {
           
           clearInterval(typingInterval);
         }
-      }, 150); // Adjust speed as needed
+      }, 100); // Adjust speed as needed
       
       return () => clearInterval(typingInterval);
     }
   }, [isTyping, typingText]);
+  
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -123,7 +128,7 @@ const EnhancedChatInterface = () => {
       const fullResponse = await enhancedApiService.sendMessageStreaming(userId, inputMessage);
       console.log(fullResponse)
       // Set the typing effect
-      setTypingText(fullResponse);
+      setTypingText(fullResponse.data.text);
       setIsTyping(true);
       
       // // Update related insights if any

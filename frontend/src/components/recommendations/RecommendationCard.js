@@ -42,7 +42,7 @@ const RecommendationCard = ({ recommendation }) => {
   const handleFeedback = async (isHelpfulFeedback) => {
     try {
       setIsSubmitting(true);
-      await enhancedApiService.submitFeedback(id, isHelpfulFeedback);
+      // await enhancedApiService.submitFeedback(id, isHelpfulFeedback);
       setFeedbackSubmitted(true);
       setIsHelpful(isHelpfulFeedback);
     } catch (error) {
